@@ -19,7 +19,7 @@ const request = require('request');
 const Wit = require('node-wit').Wit;
 
 // Webserver parameter
-const PORT = 8445;
+const PORT = process.env.PORT || 8445;
 
 // Wit.ai parameters
 const WIT_TOKEN = "QDRTC6RYM5OOHGZZHQS54CYCQPJF7B3U"; //server token
