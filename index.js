@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 8445;
 const WIT_TOKEN = "QDRTC6RYM5OOHGZZHQS54CYCQPJF7B3U"; //server token
 
 // Messenger API parameters
-const FB_PAGE_ID = 1607992516106014;
+const FB_PAGE_ID = 1065460476859322;
 if (!FB_PAGE_ID) {
   throw new Error('missing FB_PAGE_ID');
 }
@@ -178,7 +178,7 @@ app.post('/webhook', (req, res) => {
   // Parsing the Messenger API response
   console.log("new message!");
   const messaging = getFirstMessagingEntry(req.body);
-  console.log("message decoded");
+  console.log("message decoded: 	");
   if (messaging && messaging.message && messaging.recipient.id === FB_PAGE_ID) {
     // Yay! We got a new message!
     console.log(messaging.message);
