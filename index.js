@@ -19,7 +19,7 @@ const request = require('request');
 const Wit = require('node-wit').Wit;
 
 // Webserver parameter
-const PORT = 80;
+const PORT = 5000;
 
 // Wit.ai parameters
 const WIT_TOKEN = "QDRTC6RYM5OOHGZZHQS54CYCQPJF7B3U"; //server token
@@ -34,6 +34,7 @@ if (!FB_PAGE_TOKEN) {
   throw new Error('missing FB_PAGE_TOKEN');
 }
 const FB_VERIFY_TOKEN = "my_voice_is_my_password_verify_me";
+console.log("started");
 
 // Messenger API specific code
 
