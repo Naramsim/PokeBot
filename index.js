@@ -176,10 +176,11 @@ app.get('/webhook', (req, res) => {
 // Message handler
 app.post('/webhook', (req, res) => {
   // Parsing the Messenger API response
+  console.log("new message!");
   const messaging = getFirstMessagingEntry(req.body);
   if (messaging && messaging.message && messaging.recipient.id === FB_PAGE_ID) {
     // Yay! We got a new message!
-    console.log("new message!");
+    console.log(messaging.message);
 
     // We retrieve the Facebook user ID of the sender
     const sender = messaging.sender.id;
