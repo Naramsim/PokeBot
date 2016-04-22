@@ -79,7 +79,7 @@ const getFirstMessagingEntry = (body) => {
     Array.isArray(body.entry[0].messaging) &&
     body.entry[0].messaging.length > 0 &&
     body.entry[0].messaging[0]
-  ;
+  ; console.log(body.entry[0].id);
   return val || null;
 };
 
@@ -178,6 +178,7 @@ app.post('/webhook', (req, res) => {
   // Parsing the Messenger API response
   console.log("new message!");
   const messaging = getFirstMessagingEntry(req.body);
+  console.log("message decoded");
   if (messaging && messaging.message && messaging.recipient.id === FB_PAGE_ID) {
     // Yay! We got a new message!
     console.log(messaging.message);
