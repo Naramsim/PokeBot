@@ -149,6 +149,12 @@ const actions = {
     context.forecast = 'sunny';
     cb(context);
   },
+  ['fetch-pokemon-location'](sessionId, context, cb) {
+    // Here should go the api call, e.g.:
+    // context.forecast = apiCall(context.loc)
+    context.pokemon_location = 'route 50';
+    cb(context);
+  },
 };
 
 // Setting up our bot
