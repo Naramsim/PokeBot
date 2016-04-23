@@ -152,7 +152,7 @@ const actions = {
   ['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    
+    query_location(context, cb);
   },
 };
 
