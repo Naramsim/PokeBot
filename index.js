@@ -154,9 +154,9 @@ const actions = {
   ['log-pokemon'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    console.log(context);
-    console.log(sessionId);
-    console.log(cb);
+    console.log("1"+context.poke);
+    console.log("2"+sessionId);
+    console.log("3"+cb);
   },
   ['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
