@@ -314,7 +314,7 @@ function query_location(context, cb) {
 		    		locations[version.version.name+""].push(area.location_area.name);
 		    	});
 		    });
-		    
+		    console.log(JSON.stringify(locations));
 		    context.pokemon_location = locations[game_type][0];
 		    console.log("locations "+context.pokemon_location);
 		    cb(context);
