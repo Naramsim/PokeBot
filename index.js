@@ -170,7 +170,7 @@ error(sessionId, context, error) {
 ['log-pokemon'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    console.log("1"+context.poke);
+    console.log("1"+context.pokemon);
     console.log("2"+sessionId);
     console.log("3"+cb);
 },
