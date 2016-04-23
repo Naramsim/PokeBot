@@ -151,6 +151,13 @@ const actions = {
     context.forecast = 'sunny';
     cb(context);
   },
+  ['log-pokemon'](sessionId, context, cb) {
+    // Here should go the api call, e.g.:
+    // context.forecast = apiCall(context.loc)
+    console.log(context);
+    console.log(sessionId);
+    console.log(cb);
+  },
   ['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
@@ -259,7 +266,7 @@ function query_location(context, cb) {
 	console.log(context.pokemon);
 
 	var options = {
-		host: 'https://pokeapi.co',
+		host: 'pokeapi.co',
 		port: 443,
 		path: 'api/v2/pokemon/' + context.pokemon + '/'
 	};
