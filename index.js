@@ -285,6 +285,7 @@ res.sendStatus(200);
 //Functions
 function query_location(context, cb) {
 	console.log("pokemon: "+context.pokemon);
+	console.log("game type: "+context.pokemon_game_type);
 
 	var options = {
 		method: 'GET',
