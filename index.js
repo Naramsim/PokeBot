@@ -293,7 +293,7 @@ function query_location(context, cb) {
 
 	P.getPokemonByName(pokemon)
 	.then(function(response) {
-		var data = JSON.parse(response);
+		var data = response;
 		//console.log(data.location_area_encounters[0].location_area.name);
 		locations = {};
 		data.location_area_encounters.forEach(function(area){
