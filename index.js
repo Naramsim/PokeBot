@@ -254,6 +254,7 @@ app.post('/webhook', (req, res) => {
 
 //Functions
 function query_location(context, cb) {
+	console.log(context);
 	var request = new XMLHttpRequest();
 	request.open('GET', 'https://pokeapi.co/api/v2/pokemon/' + context.pokemon + '/', true);
 	request.onload = function() {
