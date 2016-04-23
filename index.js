@@ -15,6 +15,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const request = require('request');
 const http = require('http');
+var Pokedex = require('pokedex-promise-v2');
+var P = new Pokedex();
 
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
@@ -86,15 +88,15 @@ const getFirstMessagingEntry = (body) => {
 };
 
 const firstEntityValue = (entities, entity) => {
-  const val = entities && entities[entity] &&
-    Array.isArray(entities[entity]) &&
-    entities[entity].length > 0 &&
-    entities[entity][0].value
-  ;
-  if (!val) {
-    return null;
-  }
-  return typeof val === 'object' ? val.value : val;
+	const val = entities && entities[entity] &&
+	Array.isArray(entities[entity]) &&
+	entities[entity].length > 0 &&
+	entities[entity][0].value
+	;
+	if (!val) {
+		return null;
+	}
+	return typeof val === 'object' ? val.value : val;
 };
 
 // Wit.ai bot specific code
@@ -289,37 +291,27 @@ function query_location(context, cb) {
 	console.log("pokemon: "+pokemon);
 	console.log("game type: "+game_type);
 
-	var options = {
-		method: 'GET',
-		hostname: 'pokeapi.co',
-		path: '/api/v2/pokemon/' + pokemon + '/',
-		json: true
-	};
-	var response = "";
-	http.get(options, function(resp){
-		resp.on('data', function(chunk){
-			response += chunk;
+	P.getPokemonByName(pokemon)
+	.then(function(response) {
+		var data = JSON.parse(response);
+		//console.log(data.location_area_encounters[0].location_area.name);
+		locations = {};
+		data.location_area_encounters.forEach(function(area){
+			console.log(area.location_area.name + " valid for this games:");
+			area.version_details.forEach(function(version){
+				console.log(version.version.name);
+				if(typeof(locations[version.version.name+""]) === "undefined"){
+					locations[version.version.name+""] = new Array();
+				}
+				locations[version.version.name+""].push(area.location_area.name);
+			});
 		});
-		resp.on('end', function(){
-			var data = JSON.parse(response);
-		    //console.log(data.location_area_encounters[0].location_area.name);
-		    locations = {};
-		    data.location_area_encounters.forEach(function(area){
-		    	console.log(area.location_area.name + " valid for this games:");
-		    	area.version_details.forEach(function(version){
-		    		console.log(version.version.name);
-		    		if(typeof(locations[version.version.name+""]) === "undefined"){
-		    			locations[version.version.name+""] = new Array();
-		    		}
-		    		locations[version.version.name+""].push(area.location_area.name);
-		    	});
-		    });
-		    console.log(JSON.stringify(locations));
-		    context.pokemon_location = locations[game_type][0];
-		    console.log("locations "+context.pokemon_location);
-		    cb(context);
-		});
-	}).on("error", function(e){
+		console.log(JSON.stringify(locations));
+		context.pokemon_location = locations[game_type][0];
+		console.log("locations "+context.pokemon_location);
+		cb(context);
+	})
+	.catch(function(error) {
 		console.log("Got error: " + e.message);
 		cb(context);
 	});
