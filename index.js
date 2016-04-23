@@ -292,10 +292,13 @@ function query_location(context, cb) {
 		path: '/api/v2/pokemon/' + context.pokemon + '/',
 		json: true
 	};
-
+	var response = "";
 	http.get(options, function(resp){
 		resp.on('data', function(chunk){
-			var data = JSON.parse(chunk);
+			response += chunk;
+		});
+		resp.on('end', function(){
+			var data = JSON.parse(response);
 		    //console.log(data.location_area_encounters[0].location_area.name);
 		    locations = {};
 		    data.location_area_encounters.forEach(function(area){
