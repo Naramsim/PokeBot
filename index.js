@@ -316,7 +316,7 @@ function query_location(context, cb) {
 				locations[version.version.name+""].push(area.location_area.name);
 			}); 
 		});
-		console.log(JSON.stringify(locations));
+		//console.log(JSON.stringify(locations));
 		var locationsSize = locations[game_type].length - 1;
 		var toReturn = "";
 		locations[game_type].forEach(function(loc, i){
@@ -327,8 +327,8 @@ function query_location(context, cb) {
 			}
 		});
 		toReturn.slice(2);
-		context.pokemon_location = locations[game_type][0];
-		console.log("locations "+context.pokemon_location);
+		context.pokemon_location = toReturn;
+		//console.log("locations "+context.pokemon_location);
 		cb(context);
     })
     .catch(function (err) {
