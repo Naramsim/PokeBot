@@ -284,12 +284,12 @@ res.sendStatus(200);
 
 //Functions
 function query_location(context, cb) {
-	console.log(context.poke);
+	console.log("pokemon: "+context.pokemon);
 
 	var options = {
 		method: 'GET',
 		hostname: 'pokeapi.co',
-		path: 'api/v2/pokemon/' + context.poke + '/',
+		path: 'api/v2/pokemon/' + context.pokemon + '/',
 		json: true
 	};
 
