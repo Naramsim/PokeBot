@@ -287,9 +287,10 @@ function query_location(context, cb) {
 	console.log(context.poke);
 
 	var options = {
-		host: 'pokeapi.co',
-		port: 443,
-		path: 'api/v2/pokemon/' + context.poke + '/'
+		method: 'GET',
+		hostname: 'pokeapi.co',
+		path: 'api/v2/pokemon/' + context.poke + '/',
+		json: true
 	};
 
 	http.get(options, function(resp){
