@@ -287,7 +287,7 @@ res.sendStatus(200);
 
 //Functions
 function query_location(context, cb) {
-	if(!pokemon || !game_type){
+	if(!context.pokemon || !context.pokemon_game_type){
 		return;
 	}
 	var pokemon = sanitize(context.pokemon);
