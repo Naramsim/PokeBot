@@ -293,8 +293,8 @@ function query_location(context, cb) {
 	};
 
 	http.get(options, function(resp){
-		resp.on('data', function(data){
-			var data = JSON.parse(this.response);
+		resp.on('data', function(chunk){
+			var data = JSON.parse(chunk);
 		    //console.log(data.location_area_encounters[0].location_area.name);
 		    locations = {};
 		    data.location_area_encounters.forEach(function(area){
