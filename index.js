@@ -314,6 +314,16 @@ function query_location(context, cb) {
 			}); 
 		});
 		console.log(JSON.stringify(locations));
+		var locationsSize = locations[game_type].length - 1;
+		var toReturn = "";
+		locations[game_type].forEach(function(loc, i){
+			if(i === locationsSize){
+				toReturn = toReturn + " or " + loc;
+			}else{
+				toReturn = toReturn + " ," + loc;
+			}
+		});
+		toReturn.slice(2);
 		context.pokemon_location = locations[game_type][0];
 		console.log("locations "+context.pokemon_location);
 		cb(context);
@@ -327,5 +337,9 @@ function query_location(context, cb) {
 
 function sanitize(string){
 	return string.replace(/\s/g, "").toLowerCase();
+}
+
+function beautify(string){
+	return string.replace(/[\-\_\.]/g, " ").toUpperCase();
 }
 
