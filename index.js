@@ -284,13 +284,15 @@ res.sendStatus(200);
 
 //Functions
 function query_location(context, cb) {
-	console.log("pokemon: "+context.pokemon);
-	console.log("game type: "+context.pokemon_game_type);
+	var pokemon = sanitize(context.pokemon);
+	var game_type = sanitize(context.pokemon_game_type);
+	console.log("pokemon: "+pokemon);
+	console.log("game type: "+game_type);
 
 	var options = {
 		method: 'GET',
 		hostname: 'pokeapi.co',
-		path: '/api/v2/pokemon/' + context.pokemon + '/',
+		path: '/api/v2/pokemon/' + pokemon + '/',
 		json: true
 	};
 	var response = "";
@@ -313,7 +315,7 @@ function query_location(context, cb) {
 		    	});
 		    });
 		    
-		    context.pokemon_location = locations[context.pokemon_game_type][0];
+		    context.pokemon_location = locations[game_type][0];
 		    console.log("locations "+context.pokemon_location);
 		    cb(context);
 		});
@@ -321,4 +323,8 @@ function query_location(context, cb) {
 		console.log("Got error: " + e.message);
 		cb(context);
 	});
+}
+
+function sanitize(string){
+	return string.replace(/\s/g, "").toLowerCase();
 }
