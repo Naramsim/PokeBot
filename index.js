@@ -29,11 +29,11 @@ const WIT_TOKEN = "QDRTC6RYM5OOHGZZHQS54CYCQPJF7B3U"; //server token
 // Messenger API parameters
 const FB_PAGE_ID = 1065460476859322;
 if (!FB_PAGE_ID) {
-  throw new Error('missing FB_PAGE_ID');
+	throw new Error('missing FB_PAGE_ID');
 }
 const FB_PAGE_TOKEN = "EAAW2de65Vx4BAO0ZAcRZCwMyPyMT1Eyoy5tKWZBgMtjcALyjJ9no2dueEfMfSWKv3OqqH08FlXVZBHrcGwRICwR07EBKlDKoUts7vvO4gIJXa7SHZAoNYfCUHZABHON5qZAxCl1jhxB04FTsJVI56w247tecO7CKtyZA97L3Slon8QZDZD";
 if (!FB_PAGE_TOKEN) {
-  throw new Error('missing FB_PAGE_TOKEN');
+	throw new Error('missing FB_PAGE_TOKEN');
 }
 const FB_VERIFY_TOKEN = "my_voice_is_my_password_verify_me";
 console.log("started");
@@ -43,46 +43,58 @@ console.log("started");
 // See the Send API reference
 // https://developers.facebook.com/docs/messenger-platform/send-api-reference
 const fbReq = request.defaults({
-  uri: 'https://graph.facebook.com/me/messages',
-  method: 'POST',
-  json: true,
-  qs: { access_token: FB_PAGE_TOKEN },
-  headers: {'Content-Type': 'application/json'},
+	uri: 'https://graph.facebook.com/me/messages',
+	method: 'POST',
+	json: true,
+	qs: { access_token: FB_PAGE_TOKEN },
+	headers: {'Content-Type': 'application/json'},
 });
 
 const fbMessage = (recipientId, msg, cb) => {
-  const opts = {
-    form: {
-      recipient: {
-        id: recipientId,
-      },
-      message: {
-        text: msg,
-      },
-    },
-  };
-  fbReq(opts, (err, resp, data) => {
-    if (cb) {
-      cb(err || data.error && data.error.message, data);
-    }
-  });
+	const opts = {
+		form: {
+			recipient: {
+				id: recipientId,
+			},
+			message: {
+				text: msg,
+			},
+		},
+	};
+	fbReq(opts, (err, resp, data) => {
+		if (cb) {
+			cb(err || data.error && data.error.message, data);
+		}
+	});
 };
 
 // See the Webhook reference
 // https://developers.facebook.com/docs/messenger-platform/webhook-reference
 const getFirstMessagingEntry = (body) => {
-  const val = body.object == 'page' &&
-    body.entry &&
-    Array.isArray(body.entry) &&
-    body.entry.length > 0 &&
-    body.entry[0] &&
-    body.entry[0].id == FB_PAGE_ID &&
-    body.entry[0].messaging &&
-    Array.isArray(body.entry[0].messaging) &&
-    body.entry[0].messaging.length > 0 &&
-    body.entry[0].messaging[0]
-  ; console.log(body.entry[0].id);
-  return val || null;
+	const val = body.object == 'page' &&
+	body.entry &&
+	Array.isArray(body.entry) &&
+	body.entry.length > 0 &&
+	body.entry[0] &&
+	body.entry[0].id == FB_PAGE_ID &&
+	body.entry[0].messaging &&
+	Array.isArray(body.entry[0].messaging) &&
+	body.entry[0].messaging.length > 0 &&
+	body.entry[0].messaging[0]
+	; console.log(body.entry[0].id);
+	return val || null;
+};
+
+const firstEntityValue = (entities, entity) => {
+  const val = entities && entities[entity] &&
+    Array.isArray(entities[entity]) &&
+    entities[entity].length > 0 &&
+    entities[entity][0].value
+  ;
+  if (!val) {
+    return null;
+  }
+  return typeof val === 'object' ? val.value : val;
 };
 
 // Wit.ai bot specific code
@@ -93,25 +105,25 @@ const getFirstMessagingEntry = (body) => {
 const sessions = {};
 
 const findOrCreateSession = (fbid) => {
-  var sessionId;
+	var sessionId;
   // Let's see if we already have a session for the user fbid
   Object.keys(sessions).forEach(k => {
-    if (sessions[k].fbid === fbid) {
+  	if (sessions[k].fbid === fbid) {
       // Yep, got it!
       sessionId = k;
-    }
-  });
+  }
+});
   if (!sessionId) {
     // No session found for user fbid, let's create a new one
     sessionId = new Date().toISOString();
     sessions[sessionId] = {fbid: fbid, context: {}};
-  }
-  return sessionId;
+}
+return sessionId;
 };
 
 // Our bot actions
 const actions = {
-  say(sessionId, context, message, cb) {
+	say(sessionId, context, message, cb) {
     // Our bot has something to say!
     // Let's retrieve the Facebook user whose session belongs to
     const recipientId = sessions[sessionId].fbid;
@@ -119,33 +131,34 @@ const actions = {
       // Yay, we found our recipient!
       // Let's forward our bot response to her.
       fbMessage(recipientId, message, (err, data) => {
-        if (err) {
-          console.log(
-            'Oops! An error occurred while forwarding the response to',
-            recipientId,
-            ':',
-            err
-          );
-        }
+      	if (err) {
+      		console.log(
+      			'Oops! An error occurred while forwarding the response to',
+      			recipientId,
+      			':',
+      			err
+      			);
+      	}
 
         // Let's give the wheel back to our bot
         cb();
-      });
-    } else {
-      console.log('Oops! Couldn\'t find user for session:', sessionId);
+    });
+  } else {
+  	console.log('Oops! Couldn\'t find user for session:', sessionId);
       // Giving the wheel back to our bot
       cb();
-    }
-  },
-  merge(sessionId, context, entities, message, cb) {
-  	console.log(entities.pokemon);
-  	context.pokemon = entities.pokemon;
-  	context.pokemon_game_type = entities.pokemon_game_type;
-    cb(context);
-  },
-  error(sessionId, context, error) {
-    console.log(error.message);
-  },
+  }
+},
+merge(sessionId, context, entities, message, cb) {
+	const pokemon = firstEntityValue(entities, 'pokemon');
+	if (pokemon) {
+		context.pokemon = pokemon;
+	}
+	cb(context);
+},
+error(sessionId, context, error) {
+	console.log(error.message);
+},
   // You should implement your custom actions here
   // See https://wit.ai/docs/quickstart
   ['fetch-weather'](sessionId, context, cb) {
@@ -153,19 +166,19 @@ const actions = {
     // context.forecast = apiCall(context.loc)
     context.forecast = 'sunny';
     cb(context);
-  },
-  ['log-pokemon'](sessionId, context, cb) {
+},
+['log-pokemon'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
     console.log("1"+context.poke);
     console.log("2"+sessionId);
     console.log("3"+cb);
-  },
-  ['fetch-pokemon-location'](sessionId, context, cb) {
+},
+['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
     query_location(context, cb);
-  },
+},
 };
 
 // Setting up our bot
@@ -179,15 +192,15 @@ app.use(bodyParser.json());
 
 // Webhook setup
 app.get('/webhook', (req, res) => {
-  if (!FB_VERIFY_TOKEN) {
-    throw new Error('missing FB_VERIFY_TOKEN');
-  }
-  if (req.query['hub.verify_token'] === FB_VERIFY_TOKEN) {
-    res.send(req.query['hub.challenge']);
-  } else {
-    res.sendStatus(400);
-    console.log("fb auth failed");
-  }
+	if (!FB_VERIFY_TOKEN) {
+		throw new Error('missing FB_VERIFY_TOKEN');
+	}
+	if (req.query['hub.verify_token'] === FB_VERIFY_TOKEN) {
+		res.send(req.query['hub.challenge']);
+	} else {
+		res.sendStatus(400);
+		console.log("fb auth failed");
+	}
 });
 
 // Message handler
@@ -216,10 +229,10 @@ app.post('/webhook', (req, res) => {
 
       // Let's reply with an automatic message
       fbMessage(
-        sender,
-        'Sorry I can only process text messages for now.'
-      );
-    } else if (msg) {
+      	sender,
+      	'Sorry I can only process text messages for now.'
+      	);
+  } else if (msg) {
       // We received a text message
 
       // Let's forward the message to the Wit.ai Bot Engine
@@ -229,9 +242,9 @@ app.post('/webhook', (req, res) => {
         msg, // the user's message 
         sessions[sessionId].context, // the user's current session state
         (error, context) => {
-          if (error) {
-            console.log('Oops! Got an error from Wit:', error);
-          } else {
+        	if (error) {
+        		console.log('Oops! Got an error from Wit:', error);
+        	} else {
             // Our bot did everything it has to do.
             // Now it's waiting for further messages to proceed.
             console.log('Waiting for futher messages.');
@@ -245,12 +258,12 @@ app.post('/webhook', (req, res) => {
 
             // Updating the user's current session state
             sessions[sessionId].context = context;
-          }
         }
-      );
     }
+    );
   }
-  res.sendStatus(200);
+}
+res.sendStatus(200);
 });
 
 
@@ -278,20 +291,20 @@ function query_location(context, cb) {
 		resp.on('data', function(data){
 			var data = JSON.parse(this.response);
 		    //console.log(data.location_area_encounters[0].location_area.name);
-			locations = {};
-			data.location_area_encounters.forEach(function(area){
-				console.log(area.location_area.name + " valid for this games:");
-				area.version_details.forEach(function(version){
-					console.log(version.version.name);
-					if(typeof(locations[version.version.name+""]) === "undefined"){
-						locations[version.version.name+""] = new Array();
-					}
-					locations[version.version.name+""].push(area.location_area.name);
-				});
-	    	});
-	    	console.log(locations);
-	    	context.pokemon_location = locations[context.pokemon_game_type]
-	  		
+		    locations = {};
+		    data.location_area_encounters.forEach(function(area){
+		    	console.log(area.location_area.name + " valid for this games:");
+		    	area.version_details.forEach(function(version){
+		    		console.log(version.version.name);
+		    		if(typeof(locations[version.version.name+""]) === "undefined"){
+		    			locations[version.version.name+""] = new Array();
+		    		}
+		    		locations[version.version.name+""].push(area.location_area.name);
+		    	});
+		    });
+		    console.log(locations);
+		    context.pokemon_location = locations[context.pokemon_game_type]
+
 		});
 	}).on("error", function(e){
 		console.log("Got error: " + e.message);
