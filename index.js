@@ -333,7 +333,7 @@ function query_location(context, cb) {
     })
     .catch(function (err) {
         console.log("Got error: " + err.message);
-		cb(context);
+		cb(context); 
     });
 
 }
