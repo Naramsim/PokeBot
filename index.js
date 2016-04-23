@@ -287,6 +287,9 @@ res.sendStatus(200);
 
 //Functions
 function query_location(context, cb) {
+	if(!pokemon || !game_type){
+		return;
+	}
 	var pokemon = sanitize(context.pokemon);
 	var game_type = sanitize(context.pokemon_game_type);
 	console.log("pokemon: "+pokemon);
