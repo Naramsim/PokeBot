@@ -311,8 +311,9 @@ function query_location(context, cb) {
 		    		locations[version.version.name+""].push(area.location_area.name);
 		    	});
 		    });
-		    console.log("locations "+locations);
-		    context.pokemon_location = locations[context.pokemon_game_type]
+		    
+		    context.pokemon_location = locations[context.pokemon_game_type][0];
+		    console.log("locations "+context.pokemon_location);
 		    cb(context);
 		});
 	}).on("error", function(e){
