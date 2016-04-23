@@ -15,6 +15,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const request = require('request');
 const http = require('http');
+var rp = require('request-promise');
 var Pokedex = require('pokedex-promise-v2');
 var P = new Pokedex();
 
@@ -291,9 +292,14 @@ function query_location(context, cb) {
 	console.log("pokemon: "+pokemon);
 	console.log("game type: "+game_type);
 
-	P.getPokemonByName(pokemon)
-	.then(function(response) {
-		var data = response;
+	var options = {
+	    uri: 'http://pokeapi.co/api/v2/pokemon/'+pokemon,
+	    json: true // Automatically parses the JSON string in the response 
+	};
+
+	rp(options)
+    .then(function (response) {
+        var data = response;
 		//console.log(data.location_area_encounters[0].location_area.name);
 		locations = {};
 		data.location_area_encounters.forEach(function(area){
@@ -310,13 +316,32 @@ function query_location(context, cb) {
 		context.pokemon_location = locations[game_type][0];
 		console.log("locations "+context.pokemon_location);
 		cb(context);
-	})
-	.catch(function(error) {
-		console.log("Got error: " + error.message);
+    })
+    .catch(function (err) {
+        console.log("Got error: " + error.message);
 		cb(context);
-	});
+    });
+
 }
 
 function sanitize(string){
 	return string.replace(/\s/g, "").toLowerCase();
 }
+
+
+getJSON = function(url) {
+  var options = {
+    url: url,
+    json: true,
+  };
+  return rp.get(options)
+    .catch(function(error) {
+      throw error;
+    })
+    .then(function(response) {
+      if (response.statusCode !== undefined && response.statusCode !== 200) {
+        throw response;
+      }
+      return response;
+    });
+};
