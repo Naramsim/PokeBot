@@ -318,7 +318,7 @@ function query_location(context, cb) {
 		cb(context);
     })
     .catch(function (err) {
-        console.log("Got error: " + error.message);
+        console.log("Got error: " + err.message);
 		cb(context);
     });
 
@@ -328,20 +328,3 @@ function sanitize(string){
 	return string.replace(/\s/g, "").toLowerCase();
 }
 
-
-getJSON = function(url) {
-  var options = {
-    url: url,
-    json: true,
-  };
-  return rp.get(options)
-    .catch(function(error) {
-      throw error;
-    })
-    .then(function(response) {
-      if (response.statusCode !== undefined && response.statusCode !== 200) {
-        throw response;
-      }
-      return response;
-    });
-};
