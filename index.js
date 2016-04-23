@@ -152,8 +152,7 @@ const actions = {
   ['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    context.pokemon_location = 'route 50';
-    cb(context);
+    
   },
 };
 
@@ -241,3 +240,50 @@ app.post('/webhook', (req, res) => {
   }
   res.sendStatus(200);
 });
+
+
+
+
+
+
+
+
+
+
+
+
+//Functions
+function query_location(context, cb) {
+	var request = new XMLHttpRequest();
+	request.open('GET', 'https://pokeapi.co/api/v2/pokemon/' + context.pokemon + '/', true);
+	request.onload = function() {
+	  if (this.status >= 200 && this.status < 400) {
+	    // Success!
+	    var data = JSON.parse(this.response);
+	    //console.log(data.location_area_encounters[0].location_area.name);
+	    locations = {};
+	    data.location_area_encounters.forEach(function(area){
+	    	console.log(area.location_area.name + " valid for this games:");
+	      area.version_details.forEach(function(version){
+	      	console.log(version.version.name);
+	        if(typeof(locations[version.version.name+""]) === "undefined"){
+	        	locations[version.version.name+""] = new Array();
+	        }
+	        locations[version.version.name+""].push(area.location_area.name);
+	      });
+	    });
+	    console.log(locations);
+	    
+	  } else {
+	    // We reached our target server, but it returned an error
+	  }
+	  context.pokemon_location = locations[context.pokemon_game_type]
+	  cb(context);
+	};
+
+	request.onerror = function() {
+	  // There was a connection error of some sort
+	};
+
+	request.send();
+}
