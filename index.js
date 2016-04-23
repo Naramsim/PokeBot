@@ -326,7 +326,7 @@ function query_location(context, cb) {
 				toReturn = toReturn + " ," + loc;
 			}
 		});
-		toReturn = beautify(toReturn.slice(2).replace("\-(?:\d|\w)*f", ""));
+		toReturn = beautify(toReturn.slice(2).replace("/\-(?:\d|\w)*f/g", ""));
 		context.pokemon_location = toReturn;
 		//console.log("locations "+context.pokemon_location);
 		cb(context);
@@ -343,6 +343,6 @@ function sanitize(string){
 }
 
 function beautify(string){
-	return string.replace(/[\-\_\.]/g, " ").toUpperCase();
+	return string.replace(/[\-\_\.]/g, " ");
 }
 
