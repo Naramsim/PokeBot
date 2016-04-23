@@ -14,7 +14,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const request = require('request');
-const  http = require('http');
+const http = require('http');
 
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
@@ -138,9 +138,9 @@ const actions = {
     }
   },
   merge(sessionId, context, entities, message, cb) {
+  	context.pokemon = entities.pokemon;
+  	context.pokemon_game_type = entities.pokemon_game_type;
     cb(context);
-    console.log("entities: "+entities);
-    console.log("context: "+context);
   },
   error(sessionId, context, error) {
     console.log(error.message);
