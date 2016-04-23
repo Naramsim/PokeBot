@@ -139,6 +139,8 @@ const actions = {
   },
   merge(sessionId, context, entities, message, cb) {
     cb(context);
+    console.log("entities: "+entities);
+    console.log("context: "+context);
   },
   error(sessionId, context, error) {
     console.log(error.message);
