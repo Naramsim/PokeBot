@@ -289,7 +289,7 @@ function query_location(context, cb) {
 	var options = {
 		method: 'GET',
 		hostname: 'pokeapi.co',
-		path: 'api/v2/pokemon/' + context.pokemon + '/',
+		path: '/api/v2/pokemon/' + context.pokemon + '/',
 		json: true
 	};
 
