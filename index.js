@@ -138,6 +138,7 @@ const actions = {
     }
   },
   merge(sessionId, context, entities, message, cb) {
+  	console.log(entities.pokemon);
   	context.pokemon = entities.pokemon;
   	context.pokemon_game_type = entities.pokemon_game_type;
     cb(context);
