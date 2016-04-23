@@ -326,7 +326,7 @@ function query_location(context, cb) {
 				toReturn = toReturn + " ," + loc;
 			}
 		});
-		toReturn.slice(2);
+		toReturn = beautify(toReturn.slice(2).replace("\-(?:\d|\w)*f", ""));
 		context.pokemon_location = toReturn;
 		//console.log("locations "+context.pokemon_location);
 		cb(context);
