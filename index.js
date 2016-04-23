@@ -293,7 +293,7 @@ function query_location(context, cb) {
 	console.log("game type: "+game_type);
 
 	var options = {
-	    uri: 'http://pokeapi.co/api/v2/pokemon/'+pokemon,
+	    uri: 'http://pokeapi.co/api/v2/pokemon/snorlax/',
 	    json: true // Automatically parses the JSON string in the response 
 	};
 
