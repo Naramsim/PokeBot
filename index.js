@@ -300,10 +300,10 @@ function query_location(context, cb) {
 	rp(options)
     .then(function (response) {
     	console.log(JSON.stringify(response));
-        var data = response;
+        //var data = response;
 		//console.log(data.location_area_encounters[0].location_area.name);
 		locations = {};
-		data.location_area_encounters.forEach(function(area){
+		response.location_area_encounters.forEach(function(area){
 			console.log(area.location_area.name + " valid for this games:");
 			area.version_details.forEach(function(version){
 				console.log(version.version.name);
