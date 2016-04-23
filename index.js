@@ -299,6 +299,7 @@ function query_location(context, cb) {
 
 	rp(options)
     .then(function (response) {
+    	console.log(JSON.stringify(response));
         var data = response;
 		//console.log(data.location_area_encounters[0].location_area.name);
 		locations = {};
