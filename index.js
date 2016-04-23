@@ -312,7 +312,7 @@ function query_location(context, cb) {
 		cb(context);
 	})
 	.catch(function(error) {
-		console.log("Got error: " + e.message);
+		console.log("Got error: " + error.message);
 		cb(context);
 	});
 }
