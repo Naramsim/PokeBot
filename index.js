@@ -154,6 +154,10 @@ merge(sessionId, context, entities, message, cb) {
 	if (pokemon) {
 		context.pokemon = pokemon;
 	}
+	const pokemon_game_type = firstEntityValue(entities, 'pokemon_game_type');
+	if (pokemon_game_type) {
+		context.pokemon_game_type = pokemon_game_type;
+	}
 	cb(context);
 },
 error(sessionId, context, error) {
@@ -173,6 +177,7 @@ error(sessionId, context, error) {
     console.log("1"+context.pokemon);
     console.log("2"+sessionId);
     console.log("3"+cb);
+    cb(context);
 },
 ['fetch-pokemon-location'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
@@ -302,9 +307,9 @@ function query_location(context, cb) {
 		    		locations[version.version.name+""].push(area.location_area.name);
 		    	});
 		    });
-		    console.log(locations);
+		    console.log("locations "+locations);
 		    context.pokemon_location = locations[context.pokemon_game_type]
-
+		    cb(context);
 		});
 	}).on("error", function(e){
 		console.log("Got error: " + e.message);
