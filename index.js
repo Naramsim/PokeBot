@@ -14,6 +14,8 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const request = require('request');
+const  http = require('http');
+
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
 const Wit = require('node-wit').Wit;
@@ -254,37 +256,35 @@ app.post('/webhook', (req, res) => {
 
 //Functions
 function query_location(context, cb) {
-	console.log(context);
-	var request = new XMLHttpRequest();
-	request.open('GET', 'https://pokeapi.co/api/v2/pokemon/' + context.pokemon + '/', true);
-	request.onload = function() {
-	  if (this.status >= 200 && this.status < 400) {
-	    // Success!
-	    var data = JSON.parse(this.response);
-	    //console.log(data.location_area_encounters[0].location_area.name);
-	    locations = {};
-	    data.location_area_encounters.forEach(function(area){
-	    	console.log(area.location_area.name + " valid for this games:");
-	      area.version_details.forEach(function(version){
-	      	console.log(version.version.name);
-	        if(typeof(locations[version.version.name+""]) === "undefined"){
-	        	locations[version.version.name+""] = new Array();
-	        }
-	        locations[version.version.name+""].push(area.location_area.name);
-	      });
-	    });
-	    console.log(locations);
-	    
-	  } else {
-	    // We reached our target server, but it returned an error
-	  }
-	  context.pokemon_location = locations[context.pokemon_game_type]
-	  cb(context);
+	console.log(context.pokemon);
+
+	var options = {
+		host: 'https://pokeapi.co',
+		port: 443,
+		path: 'api/v2/pokemon/' + context.pokemon + '/'
 	};
 
-	request.onerror = function() {
-	  // There was a connection error of some sort
-	};
-
-	request.send();
+	http.get(options, function(resp){
+		resp.on('data', function(data){
+			var data = JSON.parse(this.response);
+		    //console.log(data.location_area_encounters[0].location_area.name);
+			locations = {};
+			data.location_area_encounters.forEach(function(area){
+				console.log(area.location_area.name + " valid for this games:");
+				area.version_details.forEach(function(version){
+					console.log(version.version.name);
+					if(typeof(locations[version.version.name+""]) === "undefined"){
+						locations[version.version.name+""] = new Array();
+					}
+					locations[version.version.name+""].push(area.location_area.name);
+				});
+	    	});
+	    	console.log(locations);
+	    	context.pokemon_location = locations[context.pokemon_game_type]
+	  		
+		});
+	}).on("error", function(e){
+		console.log("Got error: " + e.message);
+		cb(context);
+	});
 }
