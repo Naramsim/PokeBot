@@ -8,6 +8,7 @@ var cache = require('memory-cache')
 var pokemons = require("./pkm.json")
 
 var location_keywords = ["where", "location", "located"]
+var info_keywords = ["info", "infos", "information", "informations", "who"]
 var thanks_keywords = ["thanks", "tnx", "ty","(Y)"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
 var got_it = false
@@ -71,7 +72,7 @@ bot.on('message', (payload, reply) => {
 
 		if(tokens.contains("where") && tokens.contains("item")) {getItemLocation(tokens);got_it=1}
 
-		if(tokens.contains("info") || tokens.contains("informations") || tokens.contains("about")) {getPokemonInfo(tokens);got_it=1}
+		if(intersect(tokens, info_keywords)) {getPokemonInfo(reply, profile, tokens);got_it=1}
 	    
 	    if(intersect(tokens, greetings_keywords)) {getGreeting(reply, profile);got_it=1}
 
@@ -119,7 +120,7 @@ function getPokemonLocation(reply, profile, text, session) {
 	var pokemon_game_type = recognize_game_type(text)
 	var pokemon = session.pokemon
 	console.log("pokemon: "+pokemon)
-	console.log("pokeomn game type: "+pokemon_game_type)
+	console.log("pokemon game type: "+pokemon_game_type)
 
 	var options = {
 	    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
@@ -143,9 +144,10 @@ function getPokemonLocation(reply, profile, text, session) {
 			}) 
 		})
 		//console.log(JSON.stringify(locations))
+		if(!locations[pokemon_game_type]){replyToUser(reply, profile, "Are you sure that it's a pokemon game?");return;}
 		var locationsSize = locations[pokemon_game_type].length - 1
-		console.log(locationsSize)
-		if(locationsSize === 0) {replyToUser(reply, profile, "you can't catch " + pokeomn + "here")}
+		
+		if(locationsSize === 0) {replyToUser(reply, profile, "you can't catch " + pokemon + "here")}
 		var toReturn = ""
 		locations[pokemon_game_type].forEach(function(loc, i){
 			if(i === locationsSize){
@@ -155,7 +157,7 @@ function getPokemonLocation(reply, profile, text, session) {
 			}
 		})
 		toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
-		toReturn = "Try near " + toReturn
+		toReturn = "Try near " + toReturn.slice(0,300) //TODO: make more messages // limit: 320 chars
 		console.log(toReturn)
 		replyToUser(reply, profile, toReturn)
     })
@@ -170,8 +172,35 @@ function getPokemonWeakness(text) {
 function getItemLocation(text) {
 
 }
-function getPokemonInfo(text) {
+function getPokemonInfo(reply, profile, tokens) {
+	var pokemon = recognizePokemon(tokens)
+	var options = {
+	    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+	    json: true // Automatically parses the JSON string in the response 
+	}
 
+	rp(options)
+    .then(function (response) {
+    	//console.log(JSON.stringify(response))
+        //var data = response
+		//console.log(data.location_area_encounters[0].location_area.name)
+		var pokemon_types = ""
+		response.types.forEach(function(type){pokemon_types = pokemon_types + type.type.name +" "})
+		var pokemon_abilities = ""
+		response.abilities.forEach(function(ability){pokemon_abilities = pokemon_abilities + ability.ability.name +", "})
+		pokemon_abilities = pokemon_abilities.slice(0, -2)
+		var pokemon_stats = ""
+		response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
+		var pokemon_sprite = response.sprites.front_default
+
+		var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities}.\nThese are its initial stats: ${pokemon_stats}`
+		toReturn = toReturn.slice(0,300) //TODO: make more messages // limit: 320 chars
+		replyToUser(reply, profile, toReturn)
+    })
+	.catch(function (err) {
+        replyToUser(reply, profile, "I can't identify that pokemon :'(")
+        console.log(err)
+    });
 }
 function askWhichGame(reply, profile, tokens, session) {
 	var pokemon = recognizePokemon(tokens)
@@ -204,7 +233,7 @@ function intersect(a, b) {
 	return !!_intersect_(a, b).length 
 }
 function getGreeting(reply, profile) {
-	replyToUser(reply, profile, "Hello!")
+	replyToUser(reply, profile, "Hello! :|]")
 }
 function getThank(reply, profile) {
 	replyToUser(reply, profile, "You're welcome")
