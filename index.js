@@ -4,9 +4,9 @@ const express = require('express')
 const bodyParser = require('body-parser')
 
 var bot = new Bot({
-  token: '1065460476859322',
+  token: 'EAAW2de65Vx4BAL0uG2XZBrAQJ014m2uc1NozdhPExcznVus0ZAiGR1FVr7mE7lFWs64ZAnGxFpqSzcIUPJeYWUKXkCvbGn4Uk4VYJgTDilPrB9a9b1rv1WrfnVgEwARuSynck2yQnnyAFLzXDgmBnKEoXrhadX4ifaIorX1kwZDZD',
   verify: 'my_voice_is_my_password_verify_me',
-  app_secret: 'EAAW2de65Vx4BAO0ZAcRZCwMyPyMT1Eyoy5tKWZBgMtjcALyjJ9no2dueEfMfSWKv3OqqH08FlXVZBHrcGwRICwR07EBKlDKoUts7vvO4gIJXa7SHZAoNYfCUHZABHON5qZAxCl1jhxB04FTsJVI56w247tecO7CKtyZA97L3Slon8QZDZD'
+  app_secret: '42d06cc77f08dc8f12cef15985dadd5e'
 })
 
 bot.on('error', (err) => {
