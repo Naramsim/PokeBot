@@ -62,13 +62,13 @@ bot.on('message', (payload, reply) => {
 	    var session = sessions[sessionId]
 	    var text = payload.message.text
 	    //check session for questions already answered
-		if(text.contains("where")) {getPokemonLocation(text)}
+		// if(text.contains("where")) {getPokemonLocation(text)}
 
-		if(text.contains("beat")) {getPokemonFoe(text)}
+		// if(text.contains("beat")) {getPokemonFoe(text)}
 
-		if(text.contains("where") && text.contains("item")) {getItemLocation(text)}
+		// if(text.contains("where") && text.contains("item")) {getItemLocation(text)}
 
-		if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
+		// if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
 
 		reply({ text }, (err) => {
 			if (err) {console.log(err)}
