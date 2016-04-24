@@ -70,7 +70,7 @@ bot.on('message', (payload, reply) => {
 
 		if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
 
-		reply({ text }, (err) => {
+		reply({ msg }, (err) => {
 			if (err) {console.log(err)}
 			console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
 		})
