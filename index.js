@@ -15,7 +15,7 @@ bot.on('error', (err) => {
 
 bot.on('message', (payload, reply) => {
   var text = payload.message.text
-
+  console.log("new message!")
   bot.getProfile(payload.sender.id, (err, profile) => {
     if (err) throw err
 
@@ -29,10 +29,11 @@ bot.on('message', (payload, reply) => {
 
 var app = express()
 app.set('port', (process.env.PORT || 5000))
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({extended: false}))
+// parse application/json
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-  extended: true
-}))
+
 
 app.get('/', (req, res) => {
   return bot._verify(req, res)
