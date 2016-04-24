@@ -1,7 +1,7 @@
 const http = require('http')
 const Bot = require('messenger-bot')
 
-let bot = new Bot({
+var bot = new Bot({
   token: '1065460476859322',
   verify: 'my_voice_is_my_password_verify_me',
   app_secret: 'EAAW2de65Vx4BAO0ZAcRZCwMyPyMT1Eyoy5tKWZBgMtjcALyjJ9no2dueEfMfSWKv3OqqH08FlXVZBHrcGwRICwR07EBKlDKoUts7vvO4gIJXa7SHZAoNYfCUHZABHON5qZAxCl1jhxB04FTsJVI56w247tecO7CKtyZA97L3Slon8QZDZD'
@@ -12,7 +12,7 @@ bot.on('error', (err) => {
 })
 
 bot.on('message', (payload, reply) => {
-  let text = payload.message.text
+  var text = payload.message.text
 
   bot.getProfile(payload.sender.id, (err, profile) => {
     if (err) throw err
@@ -25,7 +25,7 @@ bot.on('message', (payload, reply) => {
   })
 })
 
-let app = express()
+var app = express()
 app.set('port', (process.env.PORT || 5000))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
