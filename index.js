@@ -60,7 +60,7 @@ bot.on('message', (payload, reply) => {
 		const msg = payload.message.text
 	    const atts = payload.message.attachments
 	    var session = sessions[sessionId]
-	    var text = payload.message.text.split(' ');
+	    var text = payload.message.text
 	    //check session for questions already answered
 		if(text.contains("where")) {getPokemonLocation(text)}
 
@@ -70,7 +70,7 @@ bot.on('message', (payload, reply) => {
 
 		if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
 
-		reply({ msg }, (err) => {
+		reply({ text }, (err) => {
 			if (err) {console.log(err)}
 			console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
 		})
