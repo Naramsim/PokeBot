@@ -42,16 +42,8 @@ bot.on('error', (err) => {
 })
 
 bot.on('message', (payload, reply) => {
-	//var text = payload.message.text.split(' ');
-	//if(text.contains("where")) {getPokemonLocation(text)}
-
-	//if(text.contains("beat")) {getPokemonFoe(text)}
-
-	//if(text.contains("where") && text.contains("item")) {getItemLocation(text)}
-
-	//if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
-
-
+	var text = payload.message.text.split(' ');
+	
 	bot.getProfile(payload.sender.id, (err, profile) => {
 		if (err) {console.log(err)}
 
@@ -61,16 +53,19 @@ bot.on('message', (payload, reply) => {
 	    const atts = payload.message.attachments
 	    var session = sessions[sessionId]
 	    var text = payload.message.text
-	    //check session for questions already answered
-		// if(text.contains("where")) {getPokemonLocation(text)}
 
-		// if(text.contains("beat")) {getPokemonFoe(text)}
+	    if(session.isAnswering === "pokemon_game_type"){text = getPokemonLocation(text, session)}
 
-		// if(text.contains("where") && text.contains("item")) {getItemLocation(text)}
+	    if(text.contains("where") && !text.contains("item")) {text = askWhichGame(text, session)}
 
-		// if(text.contains("info") || text.contains("informations") || text.contains("about")) {getPokemonInfo(text)}
+		if(text.contains("beat")) {text = getPokemonFoe(text)}
 
-		reply({ msg }, (err) => {
+		if(text.contains("where") && text.contains("item")) {text = getItemLocation(text)}
+
+		if(text.contains("info") || text.contains("informations") || text.contains("about")) {text = getPokemonInfo(text)}
+	    
+
+		reply({ text }, (err) => { //need to pass exact name text
 			if (err) {console.log(err)}
 			console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
 		})
@@ -100,8 +95,8 @@ console.log('running on port', app.get('port'))
 
 
 //Retrive functions
-function getPokemonLocation(text) {
-
+function getPokemonLocation(text, session) {
+	session.isAnswering = null
 }
 function getPokemonFoe(text) {
 
@@ -111,4 +106,28 @@ function getItemLocation(text) {
 }
 function getPokemonInfo(text) {
 
+}
+function askWhichGame(text, session) {
+	if(recognizePokemon(text)){
+		session.isAnswering = "pokemon_game_type"
+		session.pokemon = pokemon
+		return "could you tell me which game are you playing?"
+	}else{
+		return "I didn't recognize the pokemon."
+	}
+}
+function sanitize(string){
+	return string.replace(/\s/g, "").toLowerCase();
+}
+
+function beautify(string){
+	return string.replace(/[\-\_\.]/g, " ");
+}
+function recognizePokemon(string) {
+	var pokemon = false
+	text = text.toLowerCase.split(" ")
+	text.forEach(function(token){
+		if(pokemons.hasOwnProperty(token)){pokemon = token}
+	})
+	return !!pokemon ? pokemon : false
 }
