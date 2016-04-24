@@ -42,7 +42,6 @@ bot.on('error', (err) => {
 })
 
 bot.on('message', (payload, reply) => {
-	var text = payload.message.text.split(' ');
 	
 	bot.getProfile(payload.sender.id, (err, profile) => {
 		if (err) {console.log(err)}
@@ -52,19 +51,20 @@ bot.on('message', (payload, reply) => {
 		var msg = payload.message.text
 	    const atts = payload.message.attachments
 	    var session = sessions[sessionId]
-	    var text = payload.message.text
+	    var tokens = payload.message.text.toLowerCase().split()
+	    var answer = payload.message.text
 
-	    if(session.isAnswering === "pokemon_game_type"){text = getPokemonLocation(text, session)}
+	    if(session.isAnswering === "pokemon_game_type"){answer = getPokemonLocation(tokens, session)}
 
-	    if(text.contains("where") && !text.contains("item")) {text = askWhichGame(text, session)}
+	    if(tokens.contains("where") && !tokens.contains("item")) {answer = askWhichGame(tokens, session)}
 
-		if(text.contains("beat")) {text = getPokemonFoe(text)}
+		if(tokens.contains("beat")) {answer = getPokemonFoe(tokens)}
 
-		if(text.contains("where") && text.contains("item")) {text = getItemLocation(text)}
+		if(tokens.contains("where") && tokens.contains("item")) {answer = getItemLocation(tokens)}
 
-		if(text.contains("info") || text.contains("informations") || text.contains("about")) {text = getPokemonInfo(text)}
+		if(tokens.contains("info") || tokens.contains("informations") || tokens.contains("about")) {answer = getPokemonInfo(tokens)}
 	    
-
+		var text = answer
 		reply({ text }, (err) => { //need to pass exact name text
 			if (err) {console.log(err)}
 			console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
@@ -107,8 +107,8 @@ function getItemLocation(text) {
 function getPokemonInfo(text) {
 
 }
-function askWhichGame(text, session) {
-	if(recognizePokemon(text)){
+function askWhichGame(tokens, session) {
+	if(recognizePokemon(tokens)){
 		session.isAnswering = "pokemon_game_type"
 		session.pokemon = pokemon
 		return "could you tell me which game are you playing?"
@@ -123,10 +123,9 @@ function sanitize(string){
 function beautify(string){
 	return string.replace(/[\-\_\.]/g, " ");
 }
-function recognizePokemon(string) {
+function recognizePokemon(tokens) {
 	var pokemon = false
-	text = text.toLowerCase.split(" ")
-	text.forEach(function(token){
+	tokens.forEach(function(token){
 		if(pokemons.hasOwnProperty(token)){pokemon = token}
 	})
 	return !!pokemon ? pokemon : false
