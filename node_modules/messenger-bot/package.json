@@ -1,0 +1,65 @@
+{
+  "name": "messenger-bot",
+  "version": "2.1.0",
+  "description": "FB Messenger Platform client",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard && nyc tap test/*.js",
+    "travis-coveralls": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/remixz/messenger-bot.git"
+  },
+  "keywords": [
+    "messenger",
+    "api",
+    "client",
+    "bot"
+  ],
+  "author": {
+    "name": "Zach Bruggeman",
+    "email": "mail@bruggie.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/remixz/messenger-bot/issues"
+  },
+  "homepage": "https://github.com/remixz/messenger-bot#readme",
+  "dependencies": {
+    "request": "^2.71.0"
+  },
+  "devDependencies": {
+    "coveralls": "^2.11.9",
+    "nock": "^8.0.0",
+    "nyc": "^6.4.0",
+    "standard": "^6.0.8",
+    "tap": "^5.7.1"
+  },
+  "gitHead": "3b8d6ede4654817e52ee2058c4ead3b9f976f56a",
+  "_id": "messenger-bot@2.1.0",
+  "_shasum": "68b4c72836bd82df1841f36e3ed35759c9256136",
+  "_from": "messenger-bot@*",
+  "_npmVersion": "3.5.3",
+  "_nodeVersion": "4.2.4",
+  "_npmUser": {
+    "name": "remixz",
+    "email": "zbruggeman@me.com"
+  },
+  "maintainers": [
+    {
+      "name": "remixz",
+      "email": "mail@bruggie.com"
+    }
+  ],
+  "dist": {
+    "shasum": "68b4c72836bd82df1841f36e3ed35759c9256136",
+    "tarball": "https://registry.npmjs.org/messenger-bot/-/messenger-bot-2.1.0.tgz"
+  },
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/messenger-bot-2.1.0.tgz_1461014606632_0.8199771444778889"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/messenger-bot/-/messenger-bot-2.1.0.tgz"
+}
