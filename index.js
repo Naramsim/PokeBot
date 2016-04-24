@@ -45,6 +45,5 @@ app.post('/', (req, res) => {
 })
 
 // spin spin sugar
-app.listen(app.get('port'), function() {
-  console.log('running on port', app.get('port'))
-})
+http.createServer(bot.middleware()).listen(app.get('port'))
+console.log('running on port', app.get('port'))
