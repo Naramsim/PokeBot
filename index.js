@@ -6,10 +6,12 @@ var _intersect_ = require('intersect')
 var rp = require('request-promise')
 var cache = require('memory-cache')
 var pokemons = require("./pkm.json")
+var items = require("./items.json")
 
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
 var thanks_keywords = ["thanks", "tnx", "ty","(Y)"]
+var beat_keywords = ["beat", "defeat", "rid", "overcome"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
 var got_it = false
 
@@ -22,6 +24,10 @@ var bot = new Bot({
 Array.prototype.contains = function(obj) {
 	return this.indexOf(obj) > -1;
 };
+
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
 
 // This will contain all user sessions.
 // Each session has an entry:
@@ -68,9 +74,11 @@ bot.on('message', (payload, reply) => {
 
 	    if(intersect(tokens, location_keywords) && !tokens.contains("item")) {askWhichGame(reply, profile,  tokens, session);got_it=1} //ask game
 
-		if(tokens.contains("beat")) {getPokemonWeakness(tokens);got_it=1} // Best move
+		if(intersect(tokens, beat_keywords)) {getPokemonWeakness(reply, profile, tokens);got_it=1} // Best move
 
-		if(tokens.contains("where") && tokens.contains("item")) {getItemLocation(tokens);got_it=1}
+		var recognizedItems = _intersect_(tokens, items)
+		console.log(recognizedItems)
+		if(!!recognizedItems) {getItemInfo(reply, profile, recognizedItems);got_it=1}
 
 		if(intersect(tokens, info_keywords)) {getPokemonInfo(reply, profile, tokens);got_it=1}
 	    
@@ -78,8 +86,12 @@ bot.on('message', (payload, reply) => {
 
 	    if(intersect(tokens, thanks_keywords)) {getThank(reply, profile);got_it=1}
 
+	    if(tokens.contains("help")) {getHelp(reply, profile);got_it=1}
+
 	    tokens.forEach(function(token){
-	    	if(token.match(/(?:[aeiou]*(?:[hj][aeiou])+h?|(?:l+o+)+l+)/g)){replyToUser(reply, profile, "(Y)");got_it=1}
+	    	var emoji = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g);
+	    	if(token.match(/(?:[aeiou]*(?:[hj][aeiou])+h?|(?:l+o+)+l+)/g) && !got_it){replyToUser(reply, profile, "(Y)");got_it=1}
+	    	if(emoji){replyToUser(reply, profile, emoji[0]);got_it=1}
 	    })
 
 	    if(!got_it) {getNotUnderstand(reply, profile)}
@@ -115,6 +127,14 @@ function replyToUser(reply, profile, answer){
 		console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
 	})
 }
+function replyToUserWithImage(reply, profile, imageUrl) {
+	var attachment = {"type": "image",
+						"payload": {"url": imageUrl}}
+	reply({ attachment }, (err) => { //need to pass exact name text
+		if (err) {console.log(err)}
+		console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${imageUrl}`)
+	})
+}
 function getPokemonLocation(reply, profile, text, session) {
 	session.isAnswering = null
 	var pokemon_game_type = recognize_game_type(text)
@@ -129,9 +149,7 @@ function getPokemonLocation(reply, profile, text, session) {
 
 	rp(options)
     .then(function (response) {
-    	//console.log(JSON.stringify(response))
-        //var data = response
-		//console.log(data.location_area_encounters[0].location_area.name)
+    	var pokemon_sprite = response.sprites.back_default
 		locations = {}
 		response.location_area_encounters.forEach(function(area){
 			console.log(area.location_area.name + " valid for this games:")
@@ -159,6 +177,7 @@ function getPokemonLocation(reply, profile, text, session) {
 		toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
 		toReturn = "Try near " + toReturn.slice(0,300) //TODO: make more messages // limit: 320 chars
 		console.log(toReturn)
+		replyToUserWithImage(reply, profile, pokemon_sprite)
 		replyToUser(reply, profile, toReturn)
     })
 	.catch(function (err) {
@@ -166,11 +185,109 @@ function getPokemonLocation(reply, profile, text, session) {
         console.log(err)
     });
 }
-function getPokemonWeakness(text) {
+function getPokemonWeakness(reply, profile, tokens) {
+	var pokemon = recognizePokemon(tokens)
+	var options = {
+	    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+	    json: true // Automatically parses the JSON string in the response 
+	}
 
+	rp(options)
+    .then(function (response) {
+		var pokemon_types = []
+		response.types.forEach(function(type){pokemon_types.push(type.type.name)})
+		var pokemon_sprite = response.sprites.front_default
+		var weakness = {}
+		var cycleIndex = 0
+		pokemon_types.forEach(function(type){ //for each pokemon type
+			var options = {
+			    uri: 'http://pokeapi.co/api/v2/type/'+ type,
+			    json: true // Automatically parses the JSON string in the response 
+			}
+			rp(options)
+		    .then(function (response) { //
+				var damage_relations = response.damage_relations
+				var no_damage_from = damage_relations.no_damage_from
+				var half_damage_from = damage_relations.half_damage_from
+				var double_damage_from = damage_relations.double_damage_from
+				no_damage_from.forEach(function(type){
+					if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0}
+					else{weakness[type.name] = 0}
+				})
+				half_damage_from.forEach(function(type){
+					if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0.5}
+					else{weakness[type.name] = 0.5}
+				})
+				double_damage_from.forEach(function(type){
+					if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 2}
+					else{weakness[type.name] = 2}
+				})
+
+				cycleIndex += 1
+				if(cycleIndex === pokemon_types.length){
+					var best_attacks = ""
+					var pro_attacks = ""
+					var weak_attacks = ""
+					var shit_attacks = ""
+					Object.keys(weakness).forEach(function (key) {
+					    if(weakness[key] === 0){shit_attacks = shit_attacks + key + ", "}
+					    if(weakness[key] === 0.25){shit_attacks = shit_attacks + key + ", "}
+					    if(weakness[key] === 0.5){weak_attacks = weak_attacks + key + ", "}
+					    if(weakness[key] === 2){pro_attacks = pro_attacks + key + ", "}
+					    if(weakness[key] === 4){best_attacks = best_attacks + key + ", "}
+					});
+					if(best_attacks.length !== 0){best_attacks = "the best moves are: " + best_attacks.slice(0,-2) +" ones, "}
+					if(pro_attacks.length !== 0){pro_attacks = "use " + pro_attacks.slice(0,-2) +" moves, "}
+					if(weak_attacks.length !== 0){weak_attacks = "don´t use " + weak_attacks.slice(0,-2) +" moves, "}else{pro_attacks = pro_attacks.slice(0,-2)}
+					if(shit_attacks.length !== 0){shit_attacks = "do NOT use " + shit_attacks.slice(0,-2) +" moves"}else{weak_attacks = weak_attacks.slice(0,-2)}
+
+					var toReturn = `To beat ${pokemon} ${best_attacks}${pro_attacks}${weak_attacks}${shit_attacks}`
+					toReturn = toReturn.slice(0,300).capitalizeFirstLetter() //TODO: make more messages // limit: 320 chars
+					replyToUserWithImage(reply, profile, pokemon_sprite)
+					replyToUser(reply, profile, toReturn)
+				}
+		    })
+			.catch(function (err) {
+		        replyToUser(reply, profile, "I can't identify that pokemon :'(")
+		        console.log(err)
+		    })
+		})
+    })
+	.catch(function (err) {
+        replyToUser(reply, profile, "I can't identify that pokemon :'(")
+        console.log(err)
+    });
 }
-function getItemLocation(text) {
+function getItemInfo(reply, profile, recognizedItems) {
+	recognizedItems.forEach(function(item){
+		var options = {
+		    uri: 'http://pokeapi.co/api/v2/item/'+ item,
+		    json: true // Automatically parses the JSON string in the response 
+		}
 
+		rp(options)
+	    .then(function (response) {
+	    	var item_sprite = response.sprites.default
+	    	var item_description = response.effect_entries[0].effect
+	    	var held_by = ""
+	    	if(response.held_by_pokemon.length > 0){
+	    		response.held_by_pokemon.forEach(function(pokemon){
+	    			held_by = held_by + pokemon.pokemon.name + " ,"
+	    		})
+	    		held_by = "Sometimes " + held_by.slice(0, -2) + " can held it."
+	    	}
+	    	var arcticle = !!item.slice(0, 1).match(/[aeiouh]/g) ? "an" : "a"
+	    	toReturn = `${item_description}. Yes, it's ${arcticle} ${item}!\n${held_by}`
+			toReturn = beautify(toReturn).slice(0,300).replace("\n:", ":")
+			console.log(toReturn)
+			replyToUserWithImage(reply, profile, item_sprite)
+			replyToUser(reply, profile, toReturn)
+	    })
+		.catch(function (err) {
+	        replyToUser(reply, profile, "I don´t have any information regarding that object")
+	        console.log(err)
+	    });
+	})
 }
 function getPokemonInfo(reply, profile, tokens) {
 	var pokemon = recognizePokemon(tokens)
@@ -194,7 +311,8 @@ function getPokemonInfo(reply, profile, tokens) {
 		var pokemon_sprite = response.sprites.front_default
 
 		var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities}.\nThese are its initial stats: ${pokemon_stats}`
-		toReturn = toReturn.slice(0,300) //TODO: make more messages // limit: 320 chars
+		toReturn = toReturn.slice(0,300).capitalizeFirstLetter() //TODO: make more messages // limit: 320 chars
+		replyToUserWithImage(reply, profile, pokemon_sprite)
 		replyToUser(reply, profile, toReturn)
     })
 	.catch(function (err) {
@@ -217,7 +335,7 @@ function sanitize(string) {
 }
 
 function beautify(string) {
-	return string.replace(/[\-\_\.]/g, " ");
+	return string.replace(/[\-\_]/g, " ");
 }
 function recognizePokemon(tokens) {
 	var pokemon = false
@@ -240,4 +358,7 @@ function getThank(reply, profile) {
 }
 function getNotUnderstand(reply, profile) {
 	replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
+}
+function getHelp(reply, profile) {
+	replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, where to find an item.`)
 }

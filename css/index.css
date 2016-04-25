@@ -1,0 +1,12 @@
+html, body {
+	height: 100%;
+}
+
+span {
+	height: auto;
+	width: auto;
+}
+iframe {
+	width: 800px;
+	height: 800px;
+}
