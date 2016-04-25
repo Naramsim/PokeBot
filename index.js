@@ -11,8 +11,10 @@ var items = require("./items.json")
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
 var thanks_keywords = ["thanks", "tnx", "ty","(Y)"]
-var beat_keywords = ["beat", "defeat", "rid", "overcome"]
+var beat_keywords = ["beat", "defeat", "rid", "overcome", "counter"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
+var yes_keywords = ["ok", "yes", "yep", "okok", "alright"]
+var no_keywords = ["no", "nope", "nono"]
 var got_it = false
 
 var bot = new Bot({
@@ -70,31 +72,34 @@ bot.on('message', (payload, reply) => {
 	    var answer = payload.message.text
 	    got_it = false
 
-	    if(session.isAnswering === "pokemon_game_type"){getPokemonLocation(reply, profile,  answer, session);got_it=1} // Location
+	    if(session.isAnswering === "pokemon_game_type"){getPokemonLocation(reply, profile, answer, session);got_it=1} // Location
 
 	    if(intersect(tokens, location_keywords) && !tokens.contains("item")) {askWhichGame(reply, profile,  tokens, session);got_it=1} //ask game
 
 		if(intersect(tokens, beat_keywords)) {getPokemonWeakness(reply, profile, tokens);got_it=1} // Best move
 
 		var recognizedItems = _intersect_(tokens, items)
-		console.log(recognizedItems)
-		if(!!recognizedItems) {getItemInfo(reply, profile, recognizedItems);got_it=1}
+		if(recognizedItems.length>0) {getItemInfo(reply, profile, recognizedItems);got_it=1}
 
 		if(intersect(tokens, info_keywords)) {getPokemonInfo(reply, profile, tokens);got_it=1}
-	    
-	    if(intersect(tokens, greetings_keywords)) {getGreeting(reply, profile);got_it=1}
+
+	    if(intersect(tokens, greetings_keywords)) {getGreeting(reply, profile, session);got_it=1}
 
 	    if(intersect(tokens, thanks_keywords)) {getThank(reply, profile);got_it=1}
 
 	    if(tokens.contains("help")) {getHelp(reply, profile);got_it=1}
+
+	    if(intersect(tokens, yes_keywords)) {replyToUser(reply, profile, "GG");got_it=1}
+
+	    if(intersect(tokens, no_keywords)) {replyToUser(reply, profile, "Why? :P");got_it=1}
 
 	    tokens.forEach(function(token){
 	    	var emoji = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g);
 	    	if(token.match(/(?:[aeiou]*(?:[hj][aeiou])+h?|(?:l+o+)+l+)/g) && !got_it){replyToUser(reply, profile, "(Y)");got_it=1}
 	    	if(emoji){replyToUser(reply, profile, emoji[0]);got_it=1}
 	    })
-
-	    if(!got_it) {getNotUnderstand(reply, profile)}
+	    console.log(got_it)
+	    if(!got_it) {getNotUnderstand(reply, profile, session)}
 		
 	})
 })
@@ -350,15 +355,28 @@ function recognize_game_type(text) {
 function intersect(a, b) {
 	return !!_intersect_(a, b).length 
 }
-function getGreeting(reply, profile) {
-	replyToUser(reply, profile, "Hello! :|]")
+function getGreeting(reply, profile, session) {
+	if(!welcomeNewUser(reply, profile, session)){
+		replyToUser(reply, profile, "Hello! :|]")
+	}
 }
 function getThank(reply, profile) {
 	replyToUser(reply, profile, "You're welcome")
 }
-function getNotUnderstand(reply, profile) {
-	replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
+function getNotUnderstand(reply, profile, session) {
+	if(!welcomeNewUser(reply, profile, session)){
+		replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
+	}
 }
 function getHelp(reply, profile) {
-	replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, where to find an item.`)
+	replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos.\nJust remember that if an item is composed by two words, you must link them. Like old-rod`)
+}
+function welcomeNewUser(reply, profile, session) {
+	if(session.first_user === undefined){
+		getHelp(reply, profile)
+		session.first_user = false
+		return true
+	}else{
+		return false
+	}
 }
