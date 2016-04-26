@@ -14,6 +14,7 @@ var info_keywords = ["info", "infos", "information", "informations", "who"]
 var thanks_keywords = ["thanks", "tnx", "ty","(Y)"]
 var beat_keywords = ["beat", "defeat", "rid", "overcome", "counter"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
+var bye_keywords = ["bye", "see u", "see ya", "see you", "byebye"]
 var yes_keywords = ["ok", "yes", "yep", "okok", "alright"]
 var no_keywords = ["no", "nope", "nono"]
 var got_it = false
@@ -88,6 +89,8 @@ bot.on('message', (payload, reply) => {
 
 	    if(intersect(tokens, thanks_keywords)) {getThank(reply, profile);got_it=1}
 
+	    if(intersect(tokens, bye_keywords)) {getBye(reply, profile);got_it=1}
+
 	    if(tokens.contains("help")) {getHelp(reply, profile);got_it=1}
 
 	    if(intersect(tokens, yes_keywords)) {replyToUser(reply, profile, "GG");got_it=1}
@@ -145,24 +148,38 @@ function getPokemonLocation(reply, profile, text, session) {
 	session.isAnswering = null
 	var pokemon_game_type = recognize_game_type(text)
 	var pokemon = session.pokemon
-	//console.log("pokemon: "+pokemon)
-	//console.log("pokemon game type: "+pokemon_game_type)
+	console.log("pokemon: "+pokemon)
+	console.log("pokemon game type: "+pokemon_game_type)
 
-	if(!intersect(pokemon_game_type, games)){
+	if(!games.contains(pokemon_game_type)){
 		var supported_games = ""
 		games.forEach(function(game){supported_games = supported_games + game + ", "})
 		supported_games = supported_games.slice(0, -2)
 		replyToUser(reply, profile, `I don't know that game...\nThese are the games that I know: ${supported_games}`)
 		return
 	}
-
-	var options = {
-	    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
-	    json: true // Automatically parses the JSON string in the response 
+	
+	var cachedResult = cache.get(pokemon)
+	if(cachedResult !== null){
+		returnLocation(cachedResult)
+		console.log("From cache")
+	}else{
+		var options = {
+		    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+		    json: true // Automatically parses the JSON string in the response 
+		}
+		rp(options)
+	    .then(function (response) {
+	    	returnLocation(response)
+	    })
+		.catch(function (err) {
+	        replyToUser(reply, profile, "You can't catch this pokemon here")
+	        console.log(err)
+	    });
 	}
 
-	rp(options)
-    .then(function (response) {
+    function returnLocation(response){
+    	cache.put(pokemon, response, 100000000) //one day
     	var pokemon_sprite = response.sprites.back_default
 		locations = {}
 		response.location_area_encounters.forEach(function(area){
@@ -193,11 +210,7 @@ function getPokemonLocation(reply, profile, text, session) {
 		console.log(toReturn)
 		replyToUserWithImage(reply, profile, pokemon_sprite)
 		replyToUser(reply, profile, toReturn)
-    })
-	.catch(function (err) {
-        replyToUser(reply, profile, "You can't catch this pokemon here")
-        console.log(err)
-    });
+    }
 }
 function getPokemonWeakness(reply, profile, tokens) {
 	var pokemon = recognizePokemon(tokens)
@@ -388,4 +401,7 @@ function welcomeNewUser(reply, profile, session) {
 	}else{
 		return false
 	}
+}
+function getBye(reply, profile) {
+	replyToUser(reply, profile, "Byeeee!")
 }
