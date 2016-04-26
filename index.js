@@ -7,6 +7,7 @@ var rp = require('request-promise')
 var cache = require('memory-cache')
 var pokemons = require("./pkm.json")
 var items = require("./items.json")
+var games = require("./pkm_games.json")
 
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
@@ -144,8 +145,16 @@ function getPokemonLocation(reply, profile, text, session) {
 	session.isAnswering = null
 	var pokemon_game_type = recognize_game_type(text)
 	var pokemon = session.pokemon
-	console.log("pokemon: "+pokemon)
-	console.log("pokemon game type: "+pokemon_game_type)
+	//console.log("pokemon: "+pokemon)
+	//console.log("pokemon game type: "+pokemon_game_type)
+
+	if(!intersect(pokemon_game_type, games)){
+		var supported_games = ""
+		games.forEach(function(game){supported_games = supported_games + game + ", "})
+		supported_games = supported_games.slice(0, -2)
+		replyToUser(reply, profile, `I don't know that game...\nThese are the games that I know: ${supported_games}`)
+		return
+	}
 
 	var options = {
 	    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
@@ -167,7 +176,7 @@ function getPokemonLocation(reply, profile, text, session) {
 			}) 
 		})
 		//console.log(JSON.stringify(locations))
-		if(!locations[pokemon_game_type]){replyToUser(reply, profile, "Are you sure that it's a pokemon game?");return;}
+		if(!locations[pokemon_game_type]){replyToUser(reply, profile, "Nope, you can't catch it here.");return;}
 		var locationsSize = locations[pokemon_game_type].length - 1
 		
 		if(locationsSize === 0) {replyToUser(reply, profile, "you can't catch " + pokemon + "here")}
@@ -277,7 +286,7 @@ function getItemInfo(reply, profile, recognizedItems) {
 	    	var held_by = ""
 	    	if(response.held_by_pokemon.length > 0){
 	    		response.held_by_pokemon.forEach(function(pokemon){
-	    			held_by = held_by + pokemon.pokemon.name + " ,"
+	    			held_by = held_by + pokemon.pokemon.name + ", "
 	    		})
 	    		held_by = "Sometimes " + held_by.slice(0, -2) + " can held it."
 	    	}
