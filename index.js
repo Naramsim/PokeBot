@@ -124,7 +124,7 @@ app.post('/', (req, res) => {
 	res.end(JSON.stringify({status: 'ok'}))
 })
 
-http.createServer(bot.middleware()).listen(app.get('port'))
+http.createServer(bot.middleware()).listen(app.get('port'), process.env.NODE_IP || 'localhost')
 console.log('running on port', app.get('port'))
 
 
