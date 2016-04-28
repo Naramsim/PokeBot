@@ -4,7 +4,7 @@ const cluster = require('cluster'),
         'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
       ],
       production = process.env.NODE_ENV == 'production';
-
+var numCPUs = require('os').cpus().length;
 var stopping = false;
 
 cluster.on('disconnect', function(worker) {
