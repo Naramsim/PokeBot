@@ -141,17 +141,17 @@ console.log('running on port', app.get('port'))
 
 //Retrive functions
 function replyToUser(reply, profile, answer){
-	var answerLength = answer.length
-	for( var i = 0; i < answerLength; i += 300){
-		var text = answer.slice(i, i+300)
+	if(!!answer) {
+		var answerLength = answer.length
+		var text = answer.slice(0, 300)
 		reply({ text }, (err) => { //need to pass exact name text
 			if (err) {console.log(err)}
 			try{
+				replyToUser(reply, profile, answer.slice(300))
 				console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
 			}catch(e){console.log(e)}
-		})
+		})	
 	}
-	
 }
 function replyToUserWithImage(reply, profile, imageUrl) {
 	var attachment = {"type": "image",
