@@ -72,48 +72,55 @@ bot.on('message', (payload, reply) => {
 	    var session = sessions[sessionId]
 	    var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
 	    var answer = payload.message.text
-	    got_it = false
+	    
+	    var recognizedItems = _intersect_(tokens, items)
+	    if(session.isAnswering !== "pokemon_game_type" && recognizedItems.length>0){
+			getItemInfo(reply, profile, recognizedItems)
+		}else
+	    
 
-	    if(session.isAnswering !== "pokemon_game_type"){
-			var recognizedItems = _intersect_(tokens, items)
-			if(recognizedItems.length>0) {getItemInfo(reply, profile, recognizedItems);got_it=1}
-		}
+	    if(session.isAnswering === "pokemon_game_type"){getPokemonLocation(reply, profile, answer, session)}else // Location
+	    
 
-	    if(session.isAnswering === "pokemon_game_type"){getPokemonLocation(reply, profile, answer, session);got_it=1} // Location
+	    if(intersect(tokens, location_keywords) && !tokens.contains("item")) {askWhichGame(reply, profile,  tokens, session)}else //ask game
+	    
 
-	    if(intersect(tokens, location_keywords) && !tokens.contains("item")) {askWhichGame(reply, profile,  tokens, session);got_it=1} //ask game
-
-		if(intersect(tokens, beat_keywords)) {getPokemonWeakness(reply, profile, tokens);got_it=1} // Best move
+		if(intersect(tokens, beat_keywords)) {getPokemonWeakness(reply, profile, tokens)}else // Best move
+	    
 		
-		if(intersect(tokens, info_keywords)) {getPokemonInfo(reply, profile, tokens);got_it=1}
+	    if(intersect(tokens, greetings_keywords)) {getGreeting(reply, profile, session)}else
+	    
 
-		moves.forEach(function(v) { 
-			if(msg.indexOf(v)>=0){
-				getMoveInfo(reply, profile, v)
-				got_it=1
-			}
-		})
+	    if(intersect(tokens, thanks_keywords)) {getThank(reply, profile)}else
+	    
 
-	    if(intersect(tokens, greetings_keywords)) {getGreeting(reply, profile, session);got_it=1}
+	    if(intersect(tokens, bye_keywords)) {getBye(reply, profile)}else
+	    
 
-	    if(intersect(tokens, thanks_keywords)) {getThank(reply, profile);got_it=1}
+	    if(tokens.contains("help")) {getHelp(reply, profile)}else
+	    
 
-	    if(intersect(tokens, bye_keywords)) {getBye(reply, profile);got_it=1}
+	    if(intersect(tokens, yes_keywords)) {replyToUser(reply, profile, "GG")}else
+	    
 
-	    if(tokens.contains("help")) {getHelp(reply, profile);got_it=1}
+	    if(intersect(tokens, no_keywords)) {replyToUser(reply, profile, "Why? :P")}else
 
-	    if(intersect(tokens, yes_keywords)) {replyToUser(reply, profile, "GG");got_it=1}
+	    {
+	    	var recognizedPokemon = recognizePokemon(tokens)
+	    	console.log(recognizedPokemon)
+	    	var recogniziedMove = recognizieMove(msg)
+	    	if(!!recognizedPokemon) {getPokemonInfo(reply, profile, recognizedPokemon)}else
+	    	if(!!recogniziedMove) {getMoveInfo(reply, profile, recogniziedMove)}else
+	    	{getNotUnderstand(reply, profile, session)}
 
-	    if(intersect(tokens, no_keywords)) {replyToUser(reply, profile, "Why? :P");got_it=1}
+	    	tokens.forEach(function(token){
+		    	var emoji = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g);
+		    	if(token.match(/(?:[aeiou]*(?:[hj][aeiou])+h?|(?:l+o+)+l+)/g) ){replyToUser(reply, profile, "(Y)")}
+		    	if(emoji){replyToUser(reply, profile, emoji[0])}
+		    })
+	    }
 
-	    tokens.forEach(function(token){
-	    	var emoji = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g);
-	    	if(token.match(/(?:[aeiou]*(?:[hj][aeiou])+h?|(?:l+o+)+l+)/g) && !got_it){replyToUser(reply, profile, "(Y)");got_it=1}
-	    	if(emoji){replyToUser(reply, profile, emoji[0]);got_it=1}
-	    })
-
-	    if(!got_it) {getNotUnderstand(reply, profile, session)}
-		
+    	
 	})
 })
 
@@ -351,48 +358,51 @@ function getItemInfo(reply, profile, recognizedItems) {
 		replyToUser(reply, profile, toReturn)
 	}
 }
-function getPokemonInfo(reply, profile, tokens) {
-	var pokemon = recognizePokemon(tokens)
-	var cachedResult = cache.get(pokemon)
-	if(cachedResult !== null){
-		returnPokemonInfo(cachedResult)
-		console.log("From cache")
-	}else{
-		var options = {
-		    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
-		    json: true, // Automatically parses the JSON string in the response 
-		    timeout: TIMEOUT_LIMIT
+function getPokemonInfo(reply, profile, pokemon_) {
+	var pokemon = pokemon_
+	if(pokemon) {
+		var cachedResult = cache.get(pokemon)
+		if(cachedResult !== null){
+			returnPokemonInfo(cachedResult)
+			console.log("From cache")
+		}else{
+			var options = {
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    json: true, // Automatically parses the JSON string in the response 
+			    timeout: TIMEOUT_LIMIT
+			}
+			rp(options)
+		    .then(function (response) {
+		    	returnPokemonInfo(response)
+		    })
+			.catch(function (err) {
+		        replyToUser(reply, profile, "I can't identify that pokemon :'(")
+		        console.log(err)
+		    });
 		}
-		rp(options)
-	    .then(function (response) {
-	    	returnPokemonInfo(response)
-	    })
-		.catch(function (err) {
-	        replyToUser(reply, profile, "I can't identify that pokemon :'(")
-	        console.log(err)
-	    });
-	}
 
-	function returnPokemonInfo (response) {
-		cache.put(pokemon, response, CACHE_LIMIT) //one day
-		var pokemon_types = ""
-		response.types.forEach(function(type){pokemon_types = pokemon_types + type.type.name +" "})
-		var pokemon_abilities = ""
-		response.abilities.forEach(function(ability){pokemon_abilities = pokemon_abilities + ability.ability.name +", "})
-		pokemon_abilities = pokemon_abilities.slice(0, -2)
-		var pokemon_stats = ""
-		response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
-		var pokemon_sprite = response.sprites.front_default
+		function returnPokemonInfo (response) {
+			cache.put(pokemon, response, CACHE_LIMIT) //one day
+			var pokemon_types = ""
+			response.types.forEach(function(type){pokemon_types = pokemon_types + type.type.name +" "})
+			var pokemon_abilities = ""
+			response.abilities.forEach(function(ability){pokemon_abilities = pokemon_abilities + ability.ability.name +", "})
+			pokemon_abilities = pokemon_abilities.slice(0, -2)
+			var pokemon_stats = ""
+			response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
+			var pokemon_sprite = response.sprites.front_default
 
-		var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities}.\nThese are its initial stats: ${pokemon_stats}`
-		toReturn = toReturn.capitalizeFirstLetter()
-		replyToUserWithImage(reply, profile, pokemon_sprite)
-		replyToUser(reply, profile, toReturn)
-	}
+			var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities}.\nThese are its initial stats: ${pokemon_stats}`
+			toReturn = toReturn.capitalizeFirstLetter()
+			replyToUserWithImage(reply, profile, pokemon_sprite)
+			replyToUser(reply, profile, toReturn)
+		}
+		return true
+	}else{return false}
 }
 
 function getMoveInfo(reply, profile, move) {
-	var move = move
+	var move = move.replace(/\s/g, "-")
 	var cachedResult = cache.get(move)
 	if(cachedResult !== null){
 		returnMoveInfo(cachedResult)
@@ -445,6 +455,14 @@ function recognizePokemon(tokens) {
 		if(pokemons.hasOwnProperty(token)){pokemon = token}
 	})
 	return !!pokemon ? pokemon : false
+}
+function recognizieMove(msg) {
+	moves.forEach(function(v) {
+		if(msg.indexOf(v)>=0){
+			return msg.indexOf(v)
+		}
+		return false
+	})
 }
 function recognize_game_type(text) {
 	return sanitize(text)
