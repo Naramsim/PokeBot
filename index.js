@@ -5,10 +5,10 @@ const bodyParser = require('body-parser')
 var _intersect_ = require('intersect')
 var rp = require('request-promise')
 var cache = require('memory-cache')
-var pokemons = require("./pkm.json")
-var items = require("./items.json")
-var games = require("./pkm_games.json")
-var moves = require("./moves.json")
+var pokemons = require("./models/pkm.json")
+var items = require("./models/items.json")
+var games = require("./models/pkm_games.json")
+var moves = require("./models/moves.json")
 
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
@@ -24,8 +24,7 @@ var CACHE_LIMIT = 1000000 * 1000 //11 days
 
 var bot = new Bot({
 	token: 'EAAW2de65Vx4BAIXZByCu6EhYvMgqhfioY6pZA3TGLFr4JDOUsE4dbdZB5ppo5cRWCXQLjzuh4hksk3HNhjZCglYeZBowUTvKEh5YD4PqBjdc2ySJOgZAU4sVCvnvSWiLkr3U26KyuUiz3txnrCdfaM4OfwQl2Y3PJNnfmhmZBsBywZDZD',
-	verify: 'my_voice_is_my_password_verify_me',
-	app_secret: '42d06cc77f08dc8f12cef15985dadd5e'
+	verify: 'my_voice_is_my_password_verify_me'
 })
 
 Array.prototype.contains = function(obj) {
@@ -73,12 +72,10 @@ bot.on('message', (payload, reply) => {
 	    var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
 	    var answer = payload.message.text
 	    
-	    var recognizedItems = _intersect_(tokens, items)
-	    if(session.isAnswering !== "pokemon_game_type" && recognizedItems.length>0){
-			getItemInfo(reply, profile, recognizedItems)
-		}else
-	    
-
+	 //    var recognizedItems = _intersect_(tokens, items)
+	 //    if(session.isAnswering !== "pokemon_game_type" && recognizedItems.length>0){
+		// 	getItemInfo(reply, profile, recognizedItems)
+		// }else
 	    if(session.isAnswering === "pokemon_game_type"){getPokemonLocation(reply, profile, answer, session)}else // Location
 	    
 
@@ -107,10 +104,12 @@ bot.on('message', (payload, reply) => {
 
 	    {
 	    	var recognizedPokemon = recognizePokemon(tokens)
-	    	console.log(recognizedPokemon)
-	    	var recogniziedMove = recognizieMove(msg)
+	    	var recognizedMove = recognizeMove(msg)
+	    	var recognizedItem = recognizeItem(msg);console.log(recognizedItem)
+
 	    	if(!!recognizedPokemon) {getPokemonInfo(reply, profile, recognizedPokemon)}else
-	    	if(!!recogniziedMove) {getMoveInfo(reply, profile, recogniziedMove)}else
+	    	if(!!recognizedMove) {getMoveInfo(reply, profile, recognizedMove)}else
+	    	if(!!recognizedItem) {getItemInfo(reply, profile, recognizedItem)}else
 	    	{getNotUnderstand(reply, profile, session)}
 
 	    	tokens.forEach(function(token){
@@ -171,36 +170,38 @@ function replyToUserWithImage(reply, profile, imageUrl) {
 	})
 }
 function getPokemonLocation(reply, profile, text, session) {
-	session.isAnswering = null
-	var pokemon_game_type = recognize_game_type(text)
-	var pokemon = session.pokemon
-	if(!games.contains(pokemon_game_type)){
-		var supported_games = ""
-		games.forEach(function(game){supported_games = supported_games + game + ", "})
-		supported_games = supported_games.slice(0, -2)
-		replyToUser(reply, profile, `I don't know that game...\nThese are the games that I know: ${supported_games}`)
-		return
-	}
-	
-	var cachedResult = cache.get(pokemon)
-	if(cachedResult !== null){
-		returnLocation(cachedResult)
-		console.log("From cache")
-	}else{
-		var options = {
-		    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
-		    json: true, // Automatically parses the JSON string in the response 
-		    timeout: TIMEOUT_LIMIT
+	try{
+		session.isAnswering = null
+		var pokemon_game_type = recognize_game_type(text)
+		var pokemon = session.pokemon
+		if(!games.contains(pokemon_game_type)){
+			var supported_games = ""
+			games.forEach(function(game){supported_games = supported_games + game + ", "})
+			supported_games = supported_games.slice(0, -2)
+			replyToUser(reply, profile, `I don't know that game...\nThese are the games that I know: ${supported_games}`)
+			return
 		}
-		rp(options)
-	    .then(function (response) {
-	    	returnLocation(response)
-	    })
-		.catch(function (err) {
-	        replyToUser(reply, profile, "You can't catch this pokemon here")
-	        console.log(err)
-	    });
-	}
+		
+		var cachedResult = cache.get(pokemon)
+		if(cachedResult !== null){
+			returnLocation(cachedResult)
+			console.log("From cache")
+		}else{
+			var options = {
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    json: true, // Automatically parses the JSON string in the response 
+			    timeout: TIMEOUT_LIMIT
+			}
+			rp(options)
+		    .then(function (response) {
+		    	returnLocation(response)
+		    })
+			.catch(function (err) {
+		        replyToUser(reply, profile, "You can't catch this pokemon here")
+		        console.log(err)
+		    });
+		}
+	}catch(e){console.log(e)}
 
     function returnLocation(response){
     	cache.put(pokemon, response, CACHE_LIMIT) //one day
@@ -236,26 +237,28 @@ function getPokemonLocation(reply, profile, text, session) {
     }
 }
 function getPokemonWeakness(reply, profile, tokens) {
-	var pokemon = recognizePokemon(tokens)
-	var cachedResult = cache.get(pokemon)
-	if(cachedResult !== null){
-		returnWeakness(cachedResult)
-		console.log("From cache")
-	}else{
-		var options = {
-		    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
-		    json: true, // Automatically parses the JSON string in the response 
-		    timeout: TIMEOUT_LIMIT
+	try{
+		var pokemon = recognizePokemon(tokens)
+		var cachedResult = cache.get(pokemon)
+		if(cachedResult !== null){
+			returnWeakness(cachedResult)
+			console.log("From cache")
+		}else{
+			var options = {
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    json: true, // Automatically parses the JSON string in the response 
+			    timeout: TIMEOUT_LIMIT
+			}
+			rp(options)
+		    .then(function (response) {
+		    	returnWeakness(response)
+		    })
+			.catch(function (err) {
+		        replyToUser(reply, profile, "I can't identify that pokemon :'(")
+		        console.log(err)
+		    })
 		}
-		rp(options)
-	    .then(function (response) {
-	    	returnWeakness(response)
-	    })
-		.catch(function (err) {
-	        replyToUser(reply, profile, "I can't identify that pokemon :'(")
-	        console.log(err)
-	    })
-	}
+	}catch(e){console.log(e)}
 
 	function returnWeakness (response) {
 		cache.put(pokemon, response, CACHE_LIMIT) //one day
@@ -318,28 +321,30 @@ function getPokemonWeakness(reply, profile, tokens) {
 		})
 	}
 }
-function getItemInfo(reply, profile, recognizedItems) {
-	recognizedItems.forEach(function(item){
-		var cachedResult = cache.get(item)
+function getItemInfo(reply, profile, recognizedItem) {
+	var recognizedItem = recognizedItem.replace(/\s/g, "-")
+	try{
+		var cachedResult = cache.get(recognizedItem)
 		if(cachedResult !== null){
-			returnItemInfo(cachedResult, item)
+			returnItemInfo(cachedResult, recognizedItem)
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/item/'+ item,
+			    uri: 'http://pokeapi.co/api/v2/item/'+ recognizedItem,
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
 			rp(options)
 		    .then(function (response) {
-		    	returnItemInfo(response, item)
+		    	returnItemInfo(response, recognizedItem)
 		    })
 			.catch(function (err) {
 		        replyToUser(reply, profile, "I don´t have any information regarding that object")
 		        console.log(err)
 		    });
 		}
-	})
+	}catch(e){console.log(e)}
+
 	function returnItemInfo (response, item) {
 		cache.put(item, response, CACHE_LIMIT) //one day
 		var item_sprite = response.sprites.default
@@ -402,26 +407,28 @@ function getPokemonInfo(reply, profile, pokemon_) {
 }
 
 function getMoveInfo(reply, profile, move) {
-	var move = move.replace(/\s/g, "-")
-	var cachedResult = cache.get(move)
-	if(cachedResult !== null){
-		returnMoveInfo(cachedResult)
-		console.log("From cache")
-	}else{
-		var options = {
-		    uri: 'http://pokeapi.co/api/v2/move/'+ move,
-		    json: true, // Automatically parses the JSON string in the response 
-		    timeout: TIMEOUT_LIMIT
+	try{
+		var move = move.replace(/\s/g, "-")
+		var cachedResult = cache.get(move)
+		if(cachedResult !== null){
+			returnMoveInfo(cachedResult)
+			console.log("From cache")
+		}else{
+			var options = {
+			    uri: 'http://pokeapi.co/api/v2/move/'+ move,
+			    json: true, // Automatically parses the JSON string in the response 
+			    timeout: TIMEOUT_LIMIT
+			}
+			rp(options)
+		    .then(function (response) {
+		    	returnMoveInfo(response)
+		    })
+			.catch(function (err) {
+		        replyToUser(reply, profile, "Mmm, I cannot identify that move :'(")
+		        console.log(err)
+		    });
 		}
-		rp(options)
-	    .then(function (response) {
-	    	returnMoveInfo(response)
-	    })
-		.catch(function (err) {
-	        replyToUser(reply, profile, "Mmm, I cannot identify that move :'(")
-	        console.log(err)
-	    });
-	}
+	}catch(e){console.log(e)}
 
 	function returnMoveInfo (response) {
 		cache.put(move, response, CACHE_LIMIT) //one day
@@ -433,14 +440,16 @@ function getMoveInfo(reply, profile, move) {
 }
 
 function askWhichGame(reply, profile, tokens, session) {
-	var pokemon = recognizePokemon(tokens)
-	if(pokemon){
-		session.isAnswering = "pokemon_game_type"
-		session.pokemon = pokemon
-		replyToUser(reply, profile, "could you tell me which game are you playing?")
-	}else{
-		replyToUser(reply, profile, "I didn't recognize the pokemon.")
-	}
+	try{
+		var pokemon = recognizePokemon(tokens)
+		if(pokemon){
+			session.isAnswering = "pokemon_game_type"
+			session.pokemon = pokemon
+			replyToUser(reply, profile, "could you tell me which game are you playing?")
+		}else{
+			replyToUser(reply, profile, "I didn't recognize the pokemon.")
+		}
+	}catch(e){console.log(e)}
 }
 function sanitize(string) {
 	return string.replace(/\s/g, "").toLowerCase();
@@ -456,13 +465,31 @@ function recognizePokemon(tokens) {
 	})
 	return !!pokemon ? pokemon : false
 }
-function recognizieMove(msg) {
-	moves.forEach(function(v) {
-		if(msg.indexOf(v)>=0){
-			return msg.indexOf(v)
-		}
-		return false
-	})
+function recognizeMove(msg) {
+	try{
+		var move = false
+		moves.some(function(v) {
+			if(msg.indexOf(v)>=0){
+				move = v
+				return true
+			}
+			return false
+		})
+		return move
+	}catch(e){console.log(e)}
+}
+function recognizeItem(msg) {
+	try{
+		var item = false
+		items.some(function(v) {
+			if(msg.indexOf(v)>=0){
+				item = v
+				return true
+			}
+			return false
+		})
+		return item
+	}catch(e){console.log(e)}
 }
 function recognize_game_type(text) {
 	return sanitize(text)
@@ -487,13 +514,15 @@ function getHelp(reply, profile) {
 	replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos.\nJust remember that if an item is composed by two words, you must link them. Like old-rod`)
 }
 function welcomeNewUser(reply, profile, session) {
-	if(session.first_user === undefined){
-		getHelp(reply, profile)
-		session.first_user = false
-		return true
-	}else{
-		return false
-	}
+	try{
+		if(session.first_user === undefined){
+			getHelp(reply, profile)
+			session.first_user = false
+			return true
+		}else{
+			return false
+		}
+	}catch(e){console.log(e)}
 }
 function getBye(reply, profile) {
 	replyToUser(reply, profile, "Byeeee!")
