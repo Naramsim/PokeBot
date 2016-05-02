@@ -1,0 +1,6 @@
+{
+  "name": "Pokebot",
+  "tagline": "Pokemon bot",
+  "body": "# PokeBot\r\nThis repo contains a Facebook Messenger bot that automatically replies to users questions.\r\nYou can ask him:\r\n* where can I find torkoal?\r\n* how to beat groudon?\r\n* what is a super potion?\r\n* what are the effects of tri attack?\r\n\r\nObvioulsy you don't need to write those exact questions, the bot is smart.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
