@@ -5,19 +5,20 @@ const bodyParser = require('body-parser')
 var _intersect_ = require('intersect')
 var replyto = require("./js/reply.js")
 var get = require("./js/get.js")
+var secret = require("./tokens.json")
 
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
-var thanks_keywords = ["thanks", "tnx", "ty","(Y)"]
-var beat_keywords = ["beat", "defeat", "rid", "overcome", "counter"]
+var thanks_keywords = ["thanks", "tnx", "ty","(Y)", "thank"]
+var beat_keywords = ["beat", "defeat", "rid", "overcome", "counter", "effective"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
 var bye_keywords = ["bye", "see u", "see ya", "see you", "byebye"]
-var yes_keywords = ["ok", "yes", "yep", "okok", "alright"]
+var yes_keywords = ["ok", "yes", "yep", "okok", "alright", "k", "okay"]
 var no_keywords = ["no", "nope", "nono"]
 
 var bot = new Bot({
-	token: 'EAAW2de65Vx4BAIXZByCu6EhYvMgqhfioY6pZA3TGLFr4JDOUsE4dbdZB5ppo5cRWCXQLjzuh4hksk3HNhjZCglYeZBowUTvKEh5YD4PqBjdc2ySJOgZAU4sVCvnvSWiLkr3U26KyuUiz3txnrCdfaM4OfwQl2Y3PJNnfmhmZBsBywZDZD',
-	verify: 'my_voice_is_my_password_verify_me'
+	token: secret.page_token,
+	verify: secret.keyphrase
 })
 
 Array.prototype.contains = function(obj) {
