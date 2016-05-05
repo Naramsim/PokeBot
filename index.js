@@ -59,13 +59,12 @@ bot.on('message', (payload, reply) => {
 	bot.getProfile(payload.sender.id, (err, profile) => {
 		if (err) {console.log(err)}
 		const sessionId = findOrCreateSession(payload.sender.id)
-		var msg = payload.message.text
+		var msg = payload.message.text.toLowerCase()
 	    const atts = payload.message.attachments
 	    var session = sessions[sessionId]
 	    var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
-	    var answer = payload.message.text
 	   
-	    if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, answer, session)}else // Location
+	    if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, msg, session)}else // Location
 	    
 	    if(intersect(tokens, location_keywords) && !tokens.contains("item")) {get.askWhichGame(reply, profile,  tokens, session)}else //ask game
 	    
