@@ -6,7 +6,7 @@ var items = require("../models/items.json")
 var games = require("../models/pkm_games.json")
 var moves = require("../models/moves.json")
 var CACHE_LIMIT = 1000000 * 1000 //11 days
-var TIMEOUT_LIMIT = 30000 //30 seconds
+var TIMEOUT_LIMIT = 40000 //40 seconds
 
 function getPokemonLocation(reply, profile, text, session) {
 	try{
@@ -348,7 +348,7 @@ function getNotUnderstand(reply, profile, session) {
 	}
 }
 function getHelp(reply, profile) {
-	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...`)
+	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or move, like super potion.`)
 }
 function welcomeNewUser(reply, profile, session) {
 	try{
