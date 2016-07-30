@@ -21,6 +21,6 @@
     "messenger-bot": "^2.1.0",
     "node-wit": "^3.2.2",
     "request": "^2.72.0",
-    "request-promise": "^4.0.2"
+    "request-promise": "^4.1.0"
   }
 }
