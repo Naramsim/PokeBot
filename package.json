@@ -1,5 +1,5 @@
 {
-  "name": "botter",
+  "name": "PokeBot",
   "version": "2.0.0",
   "description": "bot for messenger",
   "main": "start.js",
@@ -11,8 +11,10 @@
     "ngrok": "ngrok http 8080"
   },
   "keywords": [
-    "botter",
-    "messenger"
+    "PokeBot",
+    "messenger",
+    "pokemon",
+    "bot"
   ],
   "author": "Naramsim",
   "license": "MIT",
@@ -22,7 +24,7 @@
     "forever": "^0.15.2",
     "intersect": "^1.0.1",
     "memory-cache": "^0.1.6",
-    "messenger-bot": "^2.3.0",
+    "messenger-bot": "git+https://github.com/eXeDK/messenger-bot.git",
     "ngrok": "^2.2.2",
     "node-wit": "^4.0.0",
     "request": "^2.74.0",

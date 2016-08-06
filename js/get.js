@@ -46,32 +46,36 @@ function getPokemonLocation(reply, profile, text, session) {
     	cache.put(pokemon, response, CACHE_LIMIT) //one day
     	var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ id + ".png"
 		locations = {}
-		response.forEach(function(array_item){
-			//console.log(area.location_area.name + " valid for this games:")
-			array_item.version_details.forEach(function(version){
-				if(typeof(locations[version.version.name+""]) === "undefined"){
-					locations[version.version.name+""] = new Array()
-				}
-				locations[version.version.name+""].push(array_item.location_area.name)
+		if (response instanceof Array) {
+			response.forEach(function(array_item){
+				//console.log(area.location_area.name + " valid for this games:")
+				array_item.version_details.forEach(function(version){
+					if(typeof(locations[version.version.name+""]) === "undefined"){
+						locations[version.version.name+""] = new Array()
+					}
+					locations[version.version.name+""].push(array_item.location_area.name)
+				})
 			})
-		})
-		//console.log(JSON.stringify(locations))
-		if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, "Nope, you can't catch it here.");return;}
-		var locationsSize = locations[pokemon_game_type].length - 1
-		
-		if(locationsSize === 0) {replyto.replyToUser(reply, profile, "you can't catch " + pokemon + "here")}
-		var toReturn = ""
-		locations[pokemon_game_type].forEach(function(loc, i){
-			if(i === locationsSize){
-				toReturn = toReturn + " or " + loc
-			}else{
-				toReturn = toReturn + ", " + loc
-			}
-		})
-		toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
-		toReturn = "Try near " + toReturn 
-		replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
-		replyto.replyToUser(reply, profile, toReturn)
+			//console.log(JSON.stringify(locations))
+			if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, "Nope, you can't catch it here.");return;}
+			var locationsSize = locations[pokemon_game_type].length - 1
+			
+			if(locationsSize === 0) {replyto.replyToUser(reply, profile, "you can't catch " + pokemon + "here")}
+			var toReturn = ""
+			locations[pokemon_game_type].forEach(function(loc, i){
+				if(i === locationsSize){
+					toReturn = toReturn + " or " + loc
+				}else{
+					toReturn = toReturn + ", " + loc
+				}
+			})
+			toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
+			toReturn = "Try near " + toReturn 
+			replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
+			replyto.replyToUser(reply, profile, toReturn)
+		} else {
+			replyto.replyToUser(reply, profile, "you can't catch " + pokemon + "here")
+		}
     }
 }
 function getPokemonWeakness(reply, profile, tokens) {
@@ -159,6 +163,16 @@ function getPokemonWeakness(reply, profile, tokens) {
 		})
 	}
 }
+
+function getPokemonCry(reply, profile, tokens) {
+	try{
+		var pokemon = recognizePokemon(tokens)
+		replyto.replyToUserWithAudio(reply, profile, `http://veekun.com/dex/media/pokemon/cries/${pokemons[pokemon]}.ogg`)
+	}catch(e){console.log(e)}
+
+	
+}
+
 function getItemInfo(reply, profile, recognizedItem) {
 	var recognizedItem = recognizedItem.replace(/\s/g, "-")
 	try{
@@ -197,10 +211,11 @@ function getItemInfo(reply, profile, recognizedItem) {
     	var arcticle = !!item.slice(0, 1).match(/[aeiouh]/g) ? "an" : "a"
     	toReturn = `${item_description}. Yes, it's ${arcticle} ${item}!\n${held_by}`
 		toReturn = beautify(toReturn).replace("\n:", ":")
-		replyto.replyToUserWithImage(reply, profile, item_sprite)
 		replyto.replyToUser(reply, profile, toReturn)
+		replyto.replyToUserWithImage(reply, profile, item_sprite)
 	}
 }
+
 function getPokemonInfo(reply, profile, pokemon_) {
 	var pokemon = pokemon_
 	if(pokemon) {
@@ -233,7 +248,7 @@ function getPokemonInfo(reply, profile, pokemon_) {
 			pokemon_abilities = pokemon_abilities.slice(0, -2)
 			var pokemon_stats = ""
 			response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
-			var pokemon_sprite = response.sprites.front_default
+			var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ pokemons[pokemon] + ".png"
 
 			var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities}.\nThese are its initial stats: ${pokemon_stats}`
 			toReturn = toReturn.capitalizeFirstLetter()
@@ -283,7 +298,7 @@ function askWhichGame(reply, profile, tokens, session) {
 		if(pokemon){
 			session.isAnswering = "pokemon_game_type"
 			session.pokemon = pokemon
-			replyto.replyToUser(reply, profile, "could you tell me which game are you playing?")
+			replyto.replyToUserWithHints(reply, profile, "could you tell me which game are you playing?", games.slice(0,9))
 		}else{
 			replyto.replyToUser(reply, profile, "I didn't recognize the pokemon.")
 		}
@@ -346,8 +361,11 @@ function getNotUnderstand(reply, profile, session) {
 		replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
 	}
 }
+function getStarted(reply, profile) {
+	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+}
 function getHelp(reply, profile) {
-	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or move, like super potion.`)
+	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
 }
 function welcomeNewUser(reply, profile, session) {
 	try{
@@ -380,11 +398,13 @@ function recognize(tokens) {
 module.exports.getPokemonLocation = getPokemonLocation
 module.exports.askWhichGame = askWhichGame
 module.exports.getPokemonWeakness = getPokemonWeakness
+module.exports.getPokemonCry = getPokemonCry
 module.exports.getGreeting = getGreeting
 module.exports.getThank = getThank
 module.exports.getBye = getBye
 module.exports.getPoGo = getPoGo
 module.exports.getHelp = getHelp
+module.exports.getStarted = getStarted
 module.exports.recognizePokemon = recognizePokemon
 module.exports.recognizeMove = recognizeMove
 module.exports.recognizeItem = recognizeItem
