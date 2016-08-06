@@ -1,11 +1,13 @@
 {
   "name": "botter",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "bot for messenger",
   "main": "start.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node start.js"
+    "production": "forever stopall && forever start start.js",
+    "debug": "node start.js",
+    "ngrok": "ngrok http 8080"
   },
   "keywords": [
     "botter",
@@ -14,13 +16,15 @@
   "author": "Naramsim",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.15.0",
-    "express": "^4.13.4",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "forever": "^0.15.2",
     "intersect": "^1.0.1",
-    "memory-cache": "^0.1.5",
-    "messenger-bot": "^2.1.0",
-    "node-wit": "^3.2.2",
-    "request": "^2.72.0",
-    "request-promise": "^3.0.0"
+    "memory-cache": "^0.1.6",
+    "messenger-bot": "^2.3.0",
+    "ngrok": "^2.2.2",
+    "node-wit": "^4.0.0",
+    "request": "^2.74.0",
+    "request-promise": "^4.1.0"
   }
 }

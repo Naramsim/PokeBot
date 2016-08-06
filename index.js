@@ -15,10 +15,12 @@ var greetings_keywords = ["hello", "hi", "hei", "ola"]
 var bye_keywords = ["bye", "see u", "see ya", "see you", "byebye"]
 var yes_keywords = ["ok", "yes", "yep", "okok", "alright", "k", "okay"]
 var no_keywords = ["no", "nope", "nono"]
+var pokemon_go_keywords = ["pogo", "pokemongo", "pokemon go"]
 
 var bot = new Bot({
-	token: secret.page_token,
-	verify: secret.keyphrase
+	token: secret.token,
+	verify: secret.verify,
+	app_secret: secret.app_secret
 })
 
 Array.prototype.contains = function(obj) {
@@ -77,6 +79,8 @@ bot.on('message', (payload, reply) => {
 	    if(intersect(tokens, bye_keywords)) {get.getBye(reply, profile)}else
 	    
 	    if(tokens.contains("help")) {get.getHelp(reply, profile)}else
+
+	    if(intersect(tokens, pokemon_go_keywords)) {get.getPoGo(reply, profile)}else
 	    
 	    if(intersect(tokens, yes_keywords)) {replyto.replyToUser(reply, profile, "GG")}else
 	    

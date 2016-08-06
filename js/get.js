@@ -23,17 +23,17 @@ function getPokemonLocation(reply, profile, text, session) {
 		
 		var cachedResult = cache.get(pokemon)
 		if(cachedResult !== null){
-			returnLocation(cachedResult)
+			returnLocation(cachedResult, pokemons[pokemon])
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemons[pokemon]+ '/encounters/',
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
 			rp(options)
 		    .then(function (response) {
-		    	returnLocation(response)
+		    	returnLocation(response, pokemons[pokemon])
 		    })
 			.catch(function (err) {
 		        replyto.replyToUser(reply, profile, "You can't catch this pokemon here")
@@ -42,19 +42,18 @@ function getPokemonLocation(reply, profile, text, session) {
 		}
 	}catch(e){console.log(e)}
 
-    function returnLocation(response){
+    function returnLocation(response, id){
     	cache.put(pokemon, response, CACHE_LIMIT) //one day
-    	var pokemon_sprite = response.sprites.back_default
+    	var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ id + ".png"
 		locations = {}
-		response.location_area_encounters.forEach(function(area){
+		response.forEach(function(array_item){
 			//console.log(area.location_area.name + " valid for this games:")
-			area.version_details.forEach(function(version){
-				//console.log(version.version.name)
+			array_item.version_details.forEach(function(version){
 				if(typeof(locations[version.version.name+""]) === "undefined"){
 					locations[version.version.name+""] = new Array()
 				}
-				locations[version.version.name+""].push(area.location_area.name)
-			}) 
+				locations[version.version.name+""].push(array_item.location_area.name)
+			})
 		})
 		//console.log(JSON.stringify(locations))
 		if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, "Nope, you can't catch it here.");return;}
@@ -84,7 +83,7 @@ function getPokemonWeakness(reply, profile, tokens) {
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon+'/',
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
@@ -108,7 +107,7 @@ function getPokemonWeakness(reply, profile, tokens) {
 		var cycleIndex = 0
 		pokemon_types.forEach(function(type){ //for each pokemon type
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/type/'+ type,
+			    uri: 'http://pokeapi.co/api/v2/type/'+ type+'/',
 			    json: true // Automatically parses the JSON string in the response 
 			}
 			rp(options)
@@ -169,7 +168,7 @@ function getItemInfo(reply, profile, recognizedItem) {
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/item/'+ recognizedItem,
+			    uri: 'http://pokeapi.co/api/v2/item/'+ recognizedItem+'/',
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
@@ -186,7 +185,7 @@ function getItemInfo(reply, profile, recognizedItem) {
 
 	function returnItemInfo (response, item) {
 		cache.put(item, response, CACHE_LIMIT) //one day
-		var item_sprite = response.sprites.default
+		var item_sprite = "http://veekun.com/dex/media/items/dream-world/"+ item + ".png"
     	var item_description = response.effect_entries[0].effect
     	var held_by = ""
     	if(response.held_by_pokemon.length > 0){
@@ -211,7 +210,7 @@ function getPokemonInfo(reply, profile, pokemon_) {
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon,
+			    uri: 'http://pokeapi.co/api/v2/pokemon/'+ pokemon+'/',
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
@@ -254,7 +253,7 @@ function getMoveInfo(reply, profile, move) {
 			console.log("From cache")
 		}else{
 			var options = {
-			    uri: 'http://pokeapi.co/api/v2/move/'+ move,
+			    uri: 'http://pokeapi.co/api/v2/move/'+ move+'/',
 			    json: true, // Automatically parses the JSON string in the response 
 			    timeout: TIMEOUT_LIMIT
 			}
@@ -364,6 +363,9 @@ function welcomeNewUser(reply, profile, session) {
 function getBye(reply, profile) {
 	replyto.replyToUser(reply, profile, "Byeeee!")
 }
+function getPoGo(reply, profile) {
+	replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
+}
 function recognize(tokens) {
 	var emoji = false
 	var laugh = false
@@ -381,6 +383,7 @@ module.exports.getPokemonWeakness = getPokemonWeakness
 module.exports.getGreeting = getGreeting
 module.exports.getThank = getThank
 module.exports.getBye = getBye
+module.exports.getPoGo = getPoGo
 module.exports.getHelp = getHelp
 module.exports.recognizePokemon = recognizePokemon
 module.exports.recognizeMove = recognizeMove
