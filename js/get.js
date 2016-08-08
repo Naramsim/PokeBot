@@ -44,8 +44,8 @@ function getPokemonLocation(reply, profile, text, session) {
 
     function returnLocation(response, id){
     	cache.put(pokemon, response, CACHE_LIMIT) //one day
-    	var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ id + ".png"
-		locations = {}
+    	var pokemon_sprite = `http://veekun.com/dex/media/pokemon/global-link/${id}.png`
+		var locations = {}
 		if (response instanceof Array) {
 			response.forEach(function(array_item){
 				//console.log(area.location_area.name + " valid for this games:")
@@ -57,10 +57,10 @@ function getPokemonLocation(reply, profile, text, session) {
 				})
 			})
 			//console.log(JSON.stringify(locations))
-			if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, "Nope, you can't catch it here.");return;}
+			if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, `Nope, you can't catch it here.\nYou can find it in these games: ${allowedCatchGames(locations)}`);return;}
 			var locationsSize = locations[pokemon_game_type].length - 1
 			
-			if(locationsSize === 0) {replyto.replyToUser(reply, profile, "you can't catch " + pokemon + "here")}
+			if(locationsSize === 0) {replyto.replyToUser(reply, profile, `You can't catch ${pokemon} here`)}
 			var toReturn = ""
 			locations[pokemon_game_type].forEach(function(loc, i){
 				if(i === locationsSize){
@@ -74,8 +74,12 @@ function getPokemonLocation(reply, profile, text, session) {
 			replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
 			replyto.replyToUser(reply, profile, toReturn)
 		} else {
-			replyto.replyToUser(reply, profile, "you can't catch " + pokemon + "here")
+			replyto.replyToUser(reply, profile, `What are you tring to do?\nYou can't catch ${pokemon} here`)
 		}
+    }
+
+    function allowedCatchGames(locations) {
+    	return Object.keys(locations).join(', ')
     }
 }
 function getPokemonWeakness(reply, profile, tokens) {
@@ -298,7 +302,7 @@ function askWhichGame(reply, profile, tokens, session) {
 		if(pokemon){
 			session.isAnswering = "pokemon_game_type"
 			session.pokemon = pokemon
-			replyto.replyToUserWithHints(reply, profile, "could you tell me which game are you playing?", games.slice(0,9))
+			replyto.replyToUserWithHints(reply, profile, "Could you tell me which game are you playing?\nI know every game, not only the one listed below. Those are just examples...", games.slice(0,9), "POKEMON_GAME")
 		}else{
 			replyto.replyToUser(reply, profile, "I didn't recognize the pokemon.")
 		}
@@ -365,7 +369,10 @@ function getStarted(reply, profile) {
 	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
 }
 function getHelp(reply, profile) {
-	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about pokemons, where to find a specific pokemon in a specific game, which are the best moves for defeating a pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+	replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where is a pokemon, pokemon infos, best moves to defeat a pokemon, effects of a move, items infos, pokemons cries.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
+}
+function getExamples(reply, profile) {
+	replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm43", "What's max elixir"], 'EXAMPLE')
 }
 function welcomeNewUser(reply, profile, session) {
 	try{
@@ -401,6 +408,7 @@ module.exports.getPokemonWeakness = getPokemonWeakness
 module.exports.getPokemonCry = getPokemonCry
 module.exports.getGreeting = getGreeting
 module.exports.getThank = getThank
+module.exports.getExamples = getExamples
 module.exports.getBye = getBye
 module.exports.getPoGo = getPoGo
 module.exports.getHelp = getHelp

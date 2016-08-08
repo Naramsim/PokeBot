@@ -13,7 +13,7 @@ var replyToUser = function(reply, profile, answer){
 	}
 }
 
-var replyToUserWithHints = function(reply, profile, answer, hints){
+var replyToUserWithHints = function(reply, profile, answer, hints, payload){
 	if(!!answer) {
 		var answerLength = answer.length
 		var text = answer.slice(0, 300)
@@ -21,7 +21,7 @@ var replyToUserWithHints = function(reply, profile, answer, hints){
 			return {
 				content_type:'text',
 		        title:hint,
-		        payload:`POKEMON_GAME_${hint}`
+		        payload:`${payload}_${hint}`
 			};
 		})
 		reply({ text, quick_replies }, (err) => { //need to pass exact name text

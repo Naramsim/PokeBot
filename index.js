@@ -18,7 +18,8 @@ var bye_keywords = ["bye", "see u", "see ya", "see you", "byebye"]
 var yes_keywords = ["ok", "yes", "yep", "okok", "alright", "k", "okay"]
 var no_keywords = ["no", "nope", "nono"]
 var pokemon_go_keywords = ["pogo", "pokemongo", "pokemon go", "pokestop", "pokemon stop"]
-var cry_keywords = ["cry", "sound", "noise"]
+var cry_keywords = ["cry", "sound", "noise", "cries"]
+var example_keywords = ["example", "examples"]
 
 try {
     var secret = require("./tokens.json")
@@ -77,6 +78,12 @@ bot.on('postback', (payload, reply) => {
                 get.getStarted(reply, profile)
             })
         }
+        if (payload.postback.payload === 'EXAMPLES') {
+            bot.getProfile(payload.sender.id, (err, profile) => {
+                if (err) {console.log(err)}
+                get.getExamples(reply, profile)
+            })
+        }
         if (payload.postback.payload === 'HELP') {
             bot.getProfile(payload.sender.id, (err, profile) => {
                 if (err) {console.log(err)}
@@ -112,6 +119,8 @@ bot.on('message', (payload, reply) => {
             if(intersect(tokens, cry_keywords)) {get.getPokemonCry(reply, profile, tokens)}else // Cry
             
             if(intersect(tokens, greetings_keywords)) {get.getGreeting(reply, profile, session)}else
+
+            if(intersect(tokens, example_keywords)) {get.getExamples(reply, profile)}else
             
             if(intersect(tokens, thanks_keywords)) {get.getThank(reply, profile)}else
             
