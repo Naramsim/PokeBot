@@ -97,18 +97,19 @@ bot.on('message', (payload, reply) => {
     console.log("new msg")
     bot.getProfile(payload.sender.id, (err, profile) => {
         if (err) {console.log(err)}
-        if (payload.message && payload.message.text) {
+
+        // text message
+        if (payload.message && payload.message.text) { 
             const sessionId = findOrCreateSession(payload.sender.id)
             var msg = payload.message.text.toLowerCase()
-            const atts = payload.message.attachments
             var session = sessions[sessionId]
             var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
+
+            bot.setTyping(payload.sender.id, true)
 
             store.storeMsg(session, msg)
 
             if(store.isRedundant(session)){replyto.replyToUser(reply, profile, "Ehm...")}else
-           
-            if(atts){replyto.replyToUser(reply, profile, "I can't process attachments")}else
 
             if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, msg, session)}else // Location
             
@@ -138,6 +139,7 @@ bot.on('message', (payload, reply) => {
                 var recognizedPokemon = get.recognizePokemon(tokens)
                 var recognizedMove = get.recognizeMove(msg)
                 var recognizedItem = get.recognizeItem(msg)
+                var recognizedAbility = get.recognizeAbility(msg)
                 var recognize = get.recognize(tokens)
                 var recognizedEmoji = recognize[0]
                 var recognizedLaughs = recognize[1]
@@ -145,13 +147,24 @@ bot.on('message', (payload, reply) => {
                 if(!!recognizedPokemon) {get.getPokemonInfo(reply, profile, recognizedPokemon)}else
                 if(!!recognizedMove) {get.getMoveInfo(reply, profile, recognizedMove)}else
                 if(!!recognizedItem) {get.getItemInfo(reply, profile, recognizedItem)}else
+                if(!!recognizedAbility) {get.getAbilityInfo(reply, profile, recognizedAbility)}else
                 if(!!recognizedEmoji) {replyto.replyToUser(reply, profile, recognizedEmoji)}else
                 if(!!recognizedLaughs) {replyto.replyToUser(reply, profile, "(Y)")}else
                 {get.getNotUnderstand(reply, profile, session)}
             }
-
-            bot.setTyping(payload.sender.id, true)
         }
+
+        // sticker
+        if (payload.message && payload.message.sticker_id) { 
+            replyto.replyToUser(reply, profile, "^_^")
+        }
+
+        // attachments
+
+        if (payload.message && payload.message.attachments) {
+            replyto.replyToUserWithImage(reply, profile, 'http://mrwgifs.com/wp-content/uploads/2013/11/Happy-Pikachu-Pichu-Pokemon-Running-For-Ash-Ketchum.gif')
+        }
+
     })
 })
 

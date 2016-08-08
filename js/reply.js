@@ -17,11 +17,12 @@ var replyToUserWithHints = function(reply, profile, answer, hints, payload){
 	if(!!answer) {
 		var answerLength = answer.length
 		var text = answer.slice(0, 300)
+		console.log(hints)
 		var quick_replies = hints.map((hint) => {
 			return {
-				content_type:'text',
-		        title:hint,
-		        payload:`${payload}_${hint}`
+				content_type: 'text',
+		        title: hint,
+		        payload: `${payload}_${hint}`
 			};
 		})
 		reply({ text, quick_replies }, (err) => { //need to pass exact name text
