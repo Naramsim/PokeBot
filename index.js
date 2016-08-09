@@ -20,6 +20,8 @@ var no_keywords = ["no", "nope", "nono"]
 var pokemon_go_keywords = ["pogo", "pokemongo", "pokemon go", "pokestop", "pokemon stop"]
 var cry_keywords = ["cry", "sound", "noise", "cries"]
 var example_keywords = ["example", "examples"]
+var evolve_keywords = ["evolve", "evolution"]
+var IV_keywords = ["iv", "power", "cp"]
 
 try {
     var secret = require("./tokens.json")
@@ -84,6 +86,12 @@ bot.on('postback', (payload, reply) => {
                 get.getExamples(reply, profile)
             })
         }
+        if (payload.postback.payload === 'POGO_HELP') {
+            bot.getProfile(payload.sender.id, (err, profile) => {
+                if (err) {console.log(err)}
+                get.getPoGoHelp(reply, profile)
+            })
+        }
         if (payload.postback.payload === 'HELP') {
             bot.getProfile(payload.sender.id, (err, profile) => {
                 if (err) {console.log(err)}
@@ -100,12 +108,12 @@ bot.on('message', (payload, reply) => {
 
         // text message
         if (payload.message && payload.message.text) { 
+            bot.setTyping(payload.sender.id, true)
+
             const sessionId = findOrCreateSession(payload.sender.id)
             var msg = payload.message.text.toLowerCase()
             var session = sessions[sessionId]
             var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
-
-            bot.setTyping(payload.sender.id, true)
 
             store.storeMsg(session, msg)
 
@@ -118,6 +126,10 @@ bot.on('message', (payload, reply) => {
             if(intersect(tokens, beat_keywords)) {get.getPokemonWeakness(reply, profile, tokens)}else // Best move
 
             if(intersect(tokens, cry_keywords)) {get.getPokemonCry(reply, profile, tokens)}else // Cry
+
+            if(intersect(tokens, evolve_keywords)) {get.getPoGOEvolution(reply, profile, tokens)}else // PoGo evolution
+
+            if(intersect(tokens, IV_keywords)) {get.getPoGOIV(reply, profile, msg, tokens)}else // PoGo IV
             
             if(intersect(tokens, greetings_keywords)) {get.getGreeting(reply, profile, session)}else
 
@@ -126,6 +138,8 @@ bot.on('message', (payload, reply) => {
             if(intersect(tokens, thanks_keywords)) {get.getThank(reply, profile)}else
             
             if(intersect(tokens, bye_keywords)) {get.getBye(reply, profile)}else
+
+            if(msg === "help pogo" || msg === "Pokemon Go help") {get.getPoGoHelp(reply, profile)}else
             
             if(tokens.contains("help")) {get.getHelp(reply, profile)}else
 

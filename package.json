@@ -27,6 +27,7 @@
     "messenger-bot": "git+https://github.com/eXeDK/messenger-bot.git",
     "ngrok": "^2.2.2",
     "node-wit": "^4.0.0",
+    "pokemon-go-iv-calculator": "^0.3.2",
     "request": "^2.74.0",
     "request-promise": "^4.1.0"
   }

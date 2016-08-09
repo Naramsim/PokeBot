@@ -13,6 +13,11 @@ curl -X POST -H "Content-Type: application/json" -d '{
       "payload":"EXAMPLES"
     },
     {
+      "type":"postback",
+      "title":"Pokemon Go help",
+      "payload":"POGO_HELP"
+    },
+    {
       "type":"web_url",
       "title":"View Website",
       "url":"https://www.facebook.com/PokemonBot"

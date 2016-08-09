@@ -1,5 +1,6 @@
 var cache = require('memory-cache')
 var rp = require('request-promise')
+var ivCalculator = require('pokemon-go-iv-calculator');
 
 var replyto = require('./reply.js')
 var convert = require('./convert.js')
@@ -9,6 +10,7 @@ var items = require('../models/items.json')
 var games = require('../models/pkm_games.json')
 var moves = require('../models/moves.json')
 var abilities = require('../models/abilities.json')
+var pogoMultipliers = require('../models/pogo_multipliers.json')
 
 var CACHE_LIMIT = 1000000 * 1000 //11 days
 var TIMEOUT_LIMIT = 40000 //40 seconds
@@ -51,39 +53,48 @@ function getPokemonLocation(reply, profile, text, session) {
     }catch(e){console.log(e)}
 
     function returnLocation(response, id){
-        cache.put(pokemon, response, CACHE_LIMIT) //one day
-        var pokemon_sprite = `http://veekun.com/dex/media/pokemon/global-link/${id}.png`
-        var locations = {}
-        if (response instanceof Array) {
-            response.forEach(function(array_item){
-                //console.log(area.location_area.name + " valid for this games:")
-                array_item.version_details.forEach(function(version){
-                    if(typeof(locations[version.version.name+""]) === "undefined"){
-                        locations[version.version.name+""] = new Array()
-                    }
-                    locations[version.version.name+""].push(array_item.location_area.name)
+        try {
+            cache.put(pokemon, response, CACHE_LIMIT) //one day
+            var pokemon_sprite = `http://veekun.com/dex/media/pokemon/global-link/${id}.png`
+            var locations = {}
+            if (response instanceof Array) {
+                response.forEach(function(array_item){
+                    //console.log(area.location_area.name + " valid for this games:")
+                    array_item.version_details.forEach(function(version){
+                        if(typeof(locations[version.version.name+""]) === "undefined"){
+                            locations[version.version.name+""] = new Array()
+                        }
+                        locations[version.version.name+""].push(array_item.location_area.name)
+                    })
                 })
-            })
-            //console.log(JSON.stringify(locations))
-            if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, `Nope, you can't catch it here.\nYou can find it in these games: ${allowedCatchGames(locations)}`);return;}
-            var locationsSize = locations[pokemon_game_type].length - 1
-            
-            if(locationsSize === 0) {replyto.replyToUser(reply, profile, `You can't catch ${pokemon} here`)}
-            var toReturn = ""
-            locations[pokemon_game_type].forEach(function(loc, i){
-                if(i === locationsSize){
-                    toReturn = toReturn + " or " + loc
-                }else{
-                    toReturn = toReturn + ", " + loc
+                //console.log(JSON.stringify(locations))
+                if(!locations[pokemon_game_type]){replyto.replyToUser(reply, profile, `What are you tring to do?\nYou can't catch ${pokemon} here.\nYou can find it in these games: ${allowedCatchGames(locations)}`);return;}
+                var locationsSize = locations[pokemon_game_type].length - 1
+                
+                if(locationsSize === 0) {
+                    if (locations.length > 0) {
+                        replyto.replyToUser(reply, profile, `Nope, you can't catch it here.\nYou can find it in these games: ${allowedCatchGames(locations)}`)
+                    } else {
+                        replyto.replyToUser(reply, profile, `You can't catch ${pokemon} here, and from our researches you can't find a wild one in any games :O`)
+                    }
+                    
                 }
-            })
-            toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
-            toReturn = "Try near " + toReturn 
-            replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
-            replyto.replyToUser(reply, profile, toReturn)
-        } else {
-            replyto.replyToUser(reply, profile, `What are you tring to do?\nYou can't catch ${pokemon} here`)
-        }
+                var toReturn = ""
+                locations[pokemon_game_type].forEach(function(loc, i){
+                    if(i === locationsSize){
+                        toReturn = toReturn + " or " + loc
+                    }else{
+                        toReturn = toReturn + ", " + loc
+                    }
+                })
+                toReturn = beautify(toReturn.slice(2).replace("/(?:\d|\w)+f\,/g", ""))
+                toReturn = "Try near " + toReturn 
+                replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
+                replyto.replyToUser(reply, profile, toReturn)
+            } else {
+                replyto.replyToUser(reply, profile, `Currently lot of people are asking us these kind of information, we will investigate! Try later on.`)
+            }
+        }catch(e){console.log(e)}
     }
 
     function allowedCatchGames(locations) {
@@ -115,64 +126,66 @@ function getPokemonWeakness(reply, profile, tokens) {
     }catch(e){console.log(e)}
 
     function returnWeakness (response) {
-        cache.put(pokemon, response, CACHE_LIMIT) //one day
-        var pokemon_types = []
-        response.types.forEach(function(type){pokemon_types.push(type.type.name)})
-        var pokemon_sprite = response.sprites.front_default
-        var weakness = {}
-        var cycleIndex = 0
-        pokemon_types.forEach(function(type){ //for each pokemon type
-            var options = {
-                uri: `${baseUrl}/type/${convert.toTypeId(type)}/${endUrl}`,
-                json: true // Automatically parses the JSON string in the response 
-            }
-            rp(options)
-            .then(function (response) { //
-                var damage_relations = response.damage_relations
-                var no_damage_from = damage_relations.no_damage_from
-                var half_damage_from = damage_relations.half_damage_from
-                var double_damage_from = damage_relations.double_damage_from
-                no_damage_from.forEach(function(type){
-                    if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0}
-                    else{weakness[type.name] = 0}
-                })
-                half_damage_from.forEach(function(type){
-                    if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0.5}
-                    else{weakness[type.name] = 0.5}
-                })
-                double_damage_from.forEach(function(type){
-                    if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 2}
-                    else{weakness[type.name] = 2}
-                })
-                cycleIndex += 1
-                if(cycleIndex === pokemon_types.length){
-                    var best_attacks = ""
-                    var pro_attacks = ""
-                    var weak_attacks = ""
-                    var shit_attacks = ""
-                    Object.keys(weakness).forEach(function (key) {
-                        if(weakness[key] === 0){shit_attacks = shit_attacks + key + ", "}
-                        if(weakness[key] === 0.25){shit_attacks = shit_attacks + key + ", "}
-                        if(weakness[key] === 0.5){weak_attacks = weak_attacks + key + ", "}
-                        if(weakness[key] === 2){pro_attacks = pro_attacks + key + ", "}
-                        if(weakness[key] === 4){best_attacks = best_attacks + key + ", "}
-                    });
-                    if(best_attacks.length !== 0){best_attacks = "the best moves are: " + best_attacks.slice(0,-2) +" ones, "}
-                    if(pro_attacks.length !== 0){pro_attacks = "use " + pro_attacks.slice(0,-2) +" moves, "}
-                    if(weak_attacks.length !== 0){weak_attacks = "don´t use " + weak_attacks.slice(0,-2) +" moves, "}else{pro_attacks = pro_attacks.slice(0,-2)}
-                    if(shit_attacks.length !== 0){shit_attacks = "do NOT use " + shit_attacks.slice(0,-2) +" moves"}else{weak_attacks = weak_attacks.slice(0,-2)}
-
-                    var toReturn = `To beat ${pokemon} ${best_attacks}${pro_attacks}${weak_attacks}${shit_attacks}`
-                    toReturn = toReturn.capitalizeFirstLetter() //TODO: make more messages // limit: 320 chars
-                    replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
-                    replyto.replyToUser(reply, profile, toReturn)
+        try{
+            cache.put(pokemon, response, CACHE_LIMIT) //one day
+            var pokemon_types = []
+            response.types.forEach(function(type){pokemon_types.push(type.type.name)})
+            var pokemon_sprite = response.sprites.front_default
+            var weakness = {}
+            var cycleIndex = 0
+            pokemon_types.forEach(function(type){ //for each pokemon type
+                var options = {
+                    uri: `${baseUrl}/type/${convert.toTypeId(type)}/${endUrl}`,
+                    json: true // Automatically parses the JSON string in the response 
                 }
+                rp(options)
+                .then(function (response) { //
+                    var damage_relations = response.damage_relations
+                    var no_damage_from = damage_relations.no_damage_from
+                    var half_damage_from = damage_relations.half_damage_from
+                    var double_damage_from = damage_relations.double_damage_from
+                    no_damage_from.forEach(function(type){
+                        if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0}
+                        else{weakness[type.name] = 0}
+                    })
+                    half_damage_from.forEach(function(type){
+                        if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 0.5}
+                        else{weakness[type.name] = 0.5}
+                    })
+                    double_damage_from.forEach(function(type){
+                        if(weakness.hasOwnProperty(type.name)){weakness[type.name] = weakness[type.name] * 2}
+                        else{weakness[type.name] = 2}
+                    })
+                    cycleIndex += 1
+                    if(cycleIndex === pokemon_types.length){
+                        var best_attacks = ""
+                        var pro_attacks = ""
+                        var weak_attacks = ""
+                        var shit_attacks = ""
+                        Object.keys(weakness).forEach(function (key) {
+                            if(weakness[key] === 0){shit_attacks = shit_attacks + key + ", "}
+                            if(weakness[key] === 0.25){shit_attacks = shit_attacks + key + ", "}
+                            if(weakness[key] === 0.5){weak_attacks = weak_attacks + key + ", "}
+                            if(weakness[key] === 2){pro_attacks = pro_attacks + key + ", "}
+                            if(weakness[key] === 4){best_attacks = best_attacks + key + ", "}
+                        });
+                        if(best_attacks.length !== 0){best_attacks = "the best moves are: " + best_attacks.slice(0,-2) +" ones, "}
+                        if(pro_attacks.length !== 0){pro_attacks = "use " + pro_attacks.slice(0,-2) +" moves, "}
+                        if(weak_attacks.length !== 0){weak_attacks = "don´t use " + weak_attacks.slice(0,-2) +" moves, "}else{pro_attacks = pro_attacks.slice(0,-2)}
+                        if(shit_attacks.length !== 0){shit_attacks = "do NOT use " + shit_attacks.slice(0,-2) +" moves"}else{weak_attacks = weak_attacks.slice(0,-2)}
+
+                        var toReturn = `To beat ${pokemon} ${best_attacks}${pro_attacks}${weak_attacks}${shit_attacks}`
+                        toReturn = toReturn.capitalizeFirstLetter() //TODO: make more messages // limit: 320 chars
+                        replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
+                        replyto.replyToUser(reply, profile, toReturn)
+                    }
+                })
+                .catch(function (err) {
+                    replyto.replyToUser(reply, profile, "I can't identify that pokemon :'(")
+                    console.log(err)
+                })
             })
-            .catch(function (err) {
-                replyto.replyToUser(reply, profile, "I can't identify that pokemon :'(")
-                console.log(err)
-            })
-        })
+        }catch(e){console.log(e)}
     }
 }
 
@@ -180,6 +193,49 @@ function getPokemonCry(reply, profile, tokens) {
     try{
         var pokemon = recognizePokemon(tokens)
         replyto.replyToUserWithAudio(reply, profile, `http://veekun.com/dex/media/pokemon/cries/${convert.toPokemonName(pokemon)}.ogg`)
+    }catch(e){console.log(e)}
+}
+
+function getPoGOEvolution(reply, profile, tokens) {
+    try{
+        var pokemon = recognizePokemon(tokens)
+        if (pokemon && pogoMultipliers.hasOwnProperty(pokemon)) {
+            var cp = tokens.filter((token) => {
+                return /\d+/.test(token)
+            })
+            if (cp && cp.length > 0) {
+                var minCP = parseInt(cp[0] * pogoMultipliers[pokemon][0])
+                var maxCP = parseInt(cp[0] * pogoMultipliers[pokemon][1])
+                replyto.replyToUser(reply, profile, `Your ${pokemon} with ${cp[0]} CP will evolve and have CP varing from ${minCP} and ${maxCP}!`)
+            } else {
+                replyto.replyToUser(reply, profile, 'Please, write also Pokemon CP, use this syntax: evolve [pokemon] with [tot] CP')
+            }
+        } else {
+            replyto.replyToUser(reply, profile, 'Write: evolve [pokemon] with [tot] CP, and be sure that your Pokemon can evolve')
+        }
+    }catch(e){console.log(e)}
+}
+
+function getPoGOIV(reply, profile, msg, tokens) {
+    try{
+        var pokemon = recognizePokemon(tokens)
+        if (pokemon) {
+            var cp = msg.match(/(?:cp[\s-]?)(\d{1,5})/)
+            var hp = msg.match(/(?:hp[\s-]?)(\d{1,5})/)
+            var dust = msg.match(/(\d{1,5})\s?(?:star)?dust/)
+            if (cp && hp && dust) {
+                const result = ivCalculator.evaluate(pokemon.charAt(0).toUpperCase() + pokemon.slice(1), cp[1], hp[1], dust[1])
+                if (result && result.ivs.length > 0) {
+                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.explanation}`)
+                } else {
+                    replyto.replyToUser(reply, profile, `Something went wrong, one of the parameter isn't correct`)
+                }
+            } else {
+                replyto.replyToUser(reply, profile, `Are you trying to get ${pokemon} IV? Well, a parameter is missing, use this syntax: calculate IV for [pokemon] with CP [cp], HP [hp] and [current dust upgrade cost] dust`)
+            }
+        } else {
+            replyto.replyToUser(reply, profile, 'IV (Individual Values) are hidden stats that affect how strong your Pokemon is in Gym Battles, beyond the Pokemon\'s CP rating\nTo calculate it type: calculate IV for [pokemon] with CP [cp], HP [hp] and [current dust upgrade cost] dust')
+        }
     }catch(e){console.log(e)}
 }
 
@@ -207,98 +263,104 @@ function getItemInfo(reply, profile, recognizedItem) {
     }catch(e){console.log(e)}
 
     function returnItemInfo (response, item) {
-        cache.put(item, response, CACHE_LIMIT) //one day
-        var item_sprite = "http://veekun.com/dex/media/items/dream-world/"+ item + ".png"
-        var item_description = response.effect_entries[0].effect
-        var item_description_plain = item_description.toLowerCase()
-        var inner_moves = []
-        var inner_pokemons = []
-        var held_by = ""
+        try {
+            cache.put(item, response, CACHE_LIMIT) //one day
+            var item_sprite = "http://veekun.com/dex/media/items/dream-world/"+ item + ".png"
+            var item_description = response.effect_entries[0].effect
+            var item_description_plain = item_description.toLowerCase()
+            var inner_moves = []
+            var inner_pokemons = []
+            var held_by = ""
 
-        moves.forEach((move) => {
-            if (item_description_plain.indexOf(` ${move} `) > -1) {
-                if (move.length <= 9) {
-                    inner_moves.push(`What ${move} does?`)
-                } else if (move.length <= 12) {
-                    inner_moves.push(`${move.capitalizeFirstLetter()} effect`)
-                } else {
-                    inner_moves.push(`${move.capitalizeFirstLetter()}`)
+            moves.forEach((move) => {
+                if (item_description_plain.indexOf(` ${move} `) > -1) {
+                    if (move.length <= 9) {
+                        inner_moves.push(`What ${move} does?`)
+                    } else if (move.length <= 12) {
+                        inner_moves.push(`${move.capitalizeFirstLetter()} effect`)
+                    } else {
+                        inner_moves.push(`${move.capitalizeFirstLetter()}`)
+                    }
                 }
-            }
-        })
-        
-        if(response.held_by_pokemon.length > 0){
-            response.held_by_pokemon.forEach(function(pokemon){
-                held_by = held_by + pokemon.pokemon.name + ", "
-                inner_pokemons.push(`Who is ${pokemon.pokemon.name}?`)
             })
-            held_by = "Sometimes " + held_by.slice(0, -2) + " can held it."
-        }
-        var arcticle = !!item.slice(0, 1).match(/[aeiouh]/g) ? "an" : "a"
-        toReturn = `${item_description}. Yes, it's ${arcticle} ${item}!\n${held_by}`
-        toReturn = beautify(toReturn).replace("\n:", ":")
-        var merged = inner_pokemons.concat(inner_moves)
-        if (merged.length >= 1) {
-            merged.push('Thanks')
-        }
-        if (merged.length >= 2) {
-            replyto.replyToUserWithHints(reply, profile, toReturn, merged, 'WAS_INNER')
-        } else {
-            replyto.replyToUser(reply, profile, toReturn)
-            replyto.replyToUserWithImage(reply, profile, item_sprite)
-        }
+            
+            if(response.held_by_pokemon.length > 0){
+                response.held_by_pokemon.forEach(function(pokemon){
+                    held_by = held_by + pokemon.pokemon.name + ", "
+                    inner_pokemons.push(`Who is ${pokemon.pokemon.name}?`)
+                })
+                held_by = "Sometimes " + held_by.slice(0, -2) + " can held it."
+            }
+            var arcticle = !!item.slice(0, 1).match(/[aeiouh]/g) ? "an" : "a"
+            toReturn = `${item_description}. Yes, it's ${arcticle} ${item}!\n${held_by}`
+            toReturn = beautify(toReturn).replace("\n:", ":")
+            var merged = inner_pokemons.concat(inner_moves)
+            if (merged.length >= 1) {
+                merged.push('Thanks')
+            }
+            if (merged.length >= 2) {
+                replyto.replyToUserWithHints(reply, profile, toReturn, merged, 'WAS_INNER')
+            } else {
+                replyto.replyToUser(reply, profile, toReturn)
+                replyto.replyToUserWithImage(reply, profile, item_sprite)
+            }
+        }catch(e){console.log(e)}
     }
 }
 
 function getPokemonInfo(reply, profile, pokemon_) {
     var pokemon = pokemon_
     if(pokemon) {
-        var cachedResult = cache.get(pokemon)
-        if(cachedResult !== null){
-            returnPokemonInfo(cachedResult)
-            console.log("From cache")
-        }else{
-            var options = {
-                uri: `${baseUrl}/pokemon/${convert.toPokemonId(pokemon)}/${endUrl}`,
-                json: true, // Automatically parses the JSON string in the response 
-                timeout: TIMEOUT_LIMIT
+        try {
+            var cachedResult = cache.get(pokemon)
+            if(cachedResult !== null){
+                returnPokemonInfo(cachedResult)
+                console.log("From cache")
+            }else{
+                var options = {
+                    uri: `${baseUrl}/pokemon/${convert.toPokemonId(pokemon)}/${endUrl}`,
+                    json: true, // Automatically parses the JSON string in the response 
+                    timeout: TIMEOUT_LIMIT
+                }
+                rp(options)
+                .then(function (response) {
+                    returnPokemonInfo(response)
+                })
+                .catch(function (err) {
+                    replyto.replyToUser(reply, profile, "I can't identify that pokemon :'(")
+                    console.log(err)
+                });
             }
-            rp(options)
-            .then(function (response) {
-                returnPokemonInfo(response)
-            })
-            .catch(function (err) {
-                replyto.replyToUser(reply, profile, "I can't identify that pokemon :'(")
-                console.log(err)
-            });
-        }
+        }catch(e){console.log(e)}
 
         function returnPokemonInfo (response) {
-            cache.put(pokemon, response, CACHE_LIMIT) //one day
-            var pokemon_types = ""
-            response.types.forEach((type) => {
-                pokemon_types = pokemon_types + type.type.name +" "
-            })
-            var pokemon_abilities = []
-            response.abilities.forEach((ability) => {
-                pokemon_abilities.push(ability.ability.name)
-            })
-            var pokemon_stats = ""
-            response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
-            var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ convert.toPokemonId(pokemon) + ".png"
-            var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities.join(', ')}.\nThese are its initial stats: ${pokemon_stats}`
-            toReturn = toReturn.capitalizeFirstLetter()
-            replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
-            setTimeout(() => {
-                if (pokemon_abilities.length > 0) {
-                    if (pokemon_abilities.length === 1) {
-                        pokemon_abilities.push('Thank you')
+            try{
+                cache.put(pokemon, response, CACHE_LIMIT) //one day
+                var pokemon_types = ""
+                response.types.forEach((type) => {
+                    pokemon_types = pokemon_types + type.type.name +" "
+                })
+                var pokemon_abilities = []
+                response.abilities.forEach((ability) => {
+                    pokemon_abilities.push(ability.ability.name)
+                })
+                var pokemon_stats = ""
+                response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
+                var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ convert.toPokemonId(pokemon) + ".png"
+                var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities.join(', ')}.\nThese are its initial stats: ${pokemon_stats}`
+                toReturn = toReturn.capitalizeFirstLetter()
+                replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
+                setTimeout(() => {
+                    if (pokemon_abilities.length > 0) {
+                        if (pokemon_abilities.length === 1) {
+                            pokemon_abilities.push('Thank you')
+                        }
+                        replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities.map(ability => `What's ${beautify(ability)}?`), 'ABILITY')
+                    } else {
+                        replyto.replyToUser(reply, profile, toReturn)
                     }
-                    replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities.map(ability => `What's ${beautify(ability)}?`), 'ABILITY')
-                } else {
-                    replyto.replyToUser(reply, profile, toReturn)
-                }
-            },2000)
+                },2000)
+            }catch(e){console.log(e)}
         }
         return true
     }else{return false}
@@ -328,11 +390,13 @@ function getMoveInfo(reply, profile, move) {
     }catch(e){console.log(e)}
 
     function returnMoveInfo (response) {
-        cache.put(move, response, CACHE_LIMIT) //one day
-        var damage_dealt = response.power === null ? "" : `It deals ${response.power} damage points.`
-        var toReturn = `${move} is a ${response.type.name} move.\n${response.effect_entries[0].effect}.\nIt's accuracy is ${response.accuracy}, and the initial PPs are ${response.pp}. ${damage_dealt}`
-        toReturn = toReturn.capitalizeFirstLetter()
-        replyto.replyToUser(reply, profile, toReturn)
+        try {
+            cache.put(move, response, CACHE_LIMIT) //one day
+            var damage_dealt = response.power === null ? "" : `It deals ${response.power} damage points.`
+            var toReturn = `${move} is a ${response.type.name} move.\n${response.effect_entries[0].effect}.\nIt's accuracy is ${response.accuracy}, and the initial PPs are ${response.pp}. ${damage_dealt}`
+            toReturn = toReturn.capitalizeFirstLetter()
+            replyto.replyToUser(reply, profile, toReturn)
+        }catch(e){console.log(e)}
     }
 }
 
@@ -360,15 +424,16 @@ function getAbilityInfo(reply, profile, ability) {
     }catch(e){console.log(e)}
 
     function returnAbilityInfo (response) {
-        cache.put(ability, response, CACHE_LIMIT) //one day
-        if (response.effect_entries.length > 0) {
-            var toReturn = response.effect_entries[0].effect
-            toReturn = toReturn.capitalizeFirstLetter()
-            replyto.replyToUser(reply, profile, toReturn)
-        } else {
-            replyto.replyToUser(reply, profile, 'This ability is so mysterious that I don\'t even know its effects')
-        }
-        
+        try {
+            cache.put(ability, response, CACHE_LIMIT) //one day
+            if (response.effect_entries.length > 0) {
+                var toReturn = response.effect_entries[0].effect
+                toReturn = toReturn.capitalizeFirstLetter()
+                replyto.replyToUser(reply, profile, toReturn)
+            } else {
+                replyto.replyToUser(reply, profile, 'This ability is so mysterious that I don\'t even know its effects')
+            }
+        }catch(e){console.log(e)}
     }
 }
 
@@ -385,21 +450,27 @@ function askWhichGame(reply, profile, tokens, session) {
     }catch(e){console.log(e)}
 }
 function sanitize(string) {
-    return string.replace(/\s/g, "").toLowerCase();
+    try{
+        return string.replace(/\s/g, "").toLowerCase();
+    }catch(e){console.log(e)}
 }
 
 function beautify(string) {
-    return string.replace(/[\-\_]/g, " ");
+    try{
+        return string.replace(/[\-\_]/g, " ");
+    }catch(e){console.log(e)}
 }
 
 function recognizePokemon(tokens) {
-    var pokemon = false
-    tokens.forEach(function(token){
-        if (pokemons.indexOf(token) > -1) {
-            pokemon = token
-        }
-    })
-    return !!pokemon ? pokemon : false
+    try{
+        var pokemon = false
+        tokens.forEach(function(token){
+            if (pokemons.indexOf(token) > -1) {
+                pokemon = token
+            }
+        })
+        return !!pokemon ? pokemon : false
+    }catch(e){console.log(e)}
 }
 function recognizeMove(msg) {
     try{
@@ -458,6 +529,12 @@ function getStarted(reply, profile) {
 }
 function getHelp(reply, profile) {
     replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where a Pokemon is, Pokemons info, best moves to defeat a Pokemon, effects of a move, items infos, Pokemons cries, TMs content, berries effects.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
+    setTimeout(() => {
+        replyto.replyToUserWithHints(reply, profile, `If you want help with Pokemon Go type: help PoGo`, ['Show some examples', 'Help PoGo', 'Thanks'], 'HELP')
+    },1000)
+}
+function getPoGoHelp(reply, profile) {
+    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
 }
 function getExamples(reply, profile) {
     replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm50?", "What is an elixir?","Cheri berry effect"], 'EXAMPLE')
@@ -480,14 +557,16 @@ function getPoGo(reply, profile) {
     replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
 }
 function recognize(tokens) {
-    var emoji = false
-    var laugh = false
-    tokens.forEach(function(token){
-        var emojiFound = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g)
-        if(token.match(/(?:[aeiou]*(?:[hj][aeiou]){2,}h?|(?:l+o+)+l+)/g) ){laugh = true}
-        if(emojiFound){emoji = emojiFound[0]}
-    })
-    return [emoji, laugh]
+    try {
+        var emoji = false
+        var laugh = false
+        tokens.forEach(function(token){
+            var emojiFound = token.match(/(\:\w+\:|\<[\/\\]?3|[\(\)\\\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*\\\)\(\/\|])(?=\s|[\!\.\?]|$)/g)
+            if(token.match(/(?:[aeiou]*(?:[hj][aeiou]){2,}h?|(?:l+o+)+l+)/g) ){laugh = true}
+            if(emojiFound){emoji = emojiFound[0]}
+        })
+        return [emoji, laugh]
+    }catch(e){console.log(e)}
 }
 
 module.exports.getPokemonLocation = getPokemonLocation
@@ -499,6 +578,9 @@ module.exports.getThank = getThank
 module.exports.getExamples = getExamples
 module.exports.getBye = getBye
 module.exports.getPoGo = getPoGo
+module.exports.getPoGOEvolution = getPoGOEvolution
+module.exports.getPoGOIV = getPoGOIV
+module.exports.getPoGoHelp = getPoGoHelp
 module.exports.getHelp = getHelp
 module.exports.getStarted = getStarted
 module.exports.recognizePokemon = recognizePokemon
