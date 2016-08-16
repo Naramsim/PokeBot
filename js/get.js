@@ -519,30 +519,44 @@ function getGreeting(reply, profile, session) {
     }
 }
 function getThank(reply, profile) {
-    replyto.replyToUser(reply, profile, "You're welcome")
+    try {
+        replyto.replyToUser(reply, profile, "You're welcome")
+    }catch(e){console.log(e)}
 }
 function getForeignLanguage(reply, profile) {
-    replyto.replyToUser(reply, profile, "Sorry, I learned only english language at school. Could you please talk to me in english?\nThank you")
+    try {
+        replyto.replyToUser(reply, profile, "Sorry, I learned only english language at school. Could you please talk to me in english?\nThank you")
+    }catch(e){console.log(e)}
 }
 function getNotUnderstand(reply, profile, session) {
-    if(!welcomeNewUser(reply, profile, session)){
-        replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
-    }
+    try {
+        if(!welcomeNewUser(reply, profile, session)){
+            replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
+        }
+    }catch(e){console.log(e)}
 }
 function getStarted(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about Pokemons, where to find a specific Pokemon in a specific game, which are the best moves for defeating a Pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about Pokemons, where to find a specific Pokemon in a specific game, which are the best moves for defeating a Pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+    }catch(e){console.log(e)}
 }
 function getHelp(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where a Pokemon is, Pokemons info, best moves to defeat a Pokemon, effects of a move, items infos, Pokemons cries, TMs content, berries effects.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
-    setTimeout(() => {
-        replyto.replyToUserWithHints(reply, profile, `If you want help with Pokemon Go type: help PoGo`, ['Show some examples', 'Help PoGo', 'Thanks'], 'HELP')
-    },1000)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where a Pokemon is, Pokemons info, best moves to defeat a Pokemon, effects of a move, items infos, Pokemons cries, TMs content, berries effects.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
+        setTimeout(() => {
+            replyto.replyToUserWithHints(reply, profile, `If you want help with Pokemon Go type: help PoGo`, ['Show some examples', 'Help PoGo', 'Thanks'], 'HELP')
+        },1000)
+    }catch(e){console.log(e)}
 }
 function getPoGoHelp(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
+    }catch(e){console.log(e)}   
 }
 function getExamples(reply, profile) {
-    replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm50?", "What is an elixir?","Cheri berry effect"], 'EXAMPLE')
+    try {
+        replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm50?", "What is an elixir?","Cheri berry effect"], 'EXAMPLE')
+    }catch(e){console.log(e)}
 }
 function welcomeNewUser(reply, profile, session) {
     try{
@@ -556,10 +570,14 @@ function welcomeNewUser(reply, profile, session) {
     }catch(e){console.log(e)}
 }
 function getBye(reply, profile) {
-    replyto.replyToUser(reply, profile, "Byeeee!")
+    try{
+        replyto.replyToUser(reply, profile, "Byeeee!")
+    }catch(e){console.log(e)}
 }
 function getPoGo(reply, profile) {
-    replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
+    try{
+        replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
+    }catch(e){console.log(e)}
 }
 function recognize(tokens) {
     try {
