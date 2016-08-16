@@ -224,9 +224,11 @@ function getPoGOIV(reply, profile, msg, tokens) {
             var hp = msg.match(/(?:hp[\s-]?)(\d{1,5})/)
             var dust = msg.match(/(\d{1,5})\s?(?:star)?dust/)
             if (cp && hp && dust) {
-                const result = ivCalculator.evaluate(pokemon.charAt(0).toUpperCase() + pokemon.slice(1), cp[1], hp[1], dust[1])
+                const result = ivCalculator.evaluate(pokemon.charAt(0).toUpperCase() + pokemon.slice(1), cp[1], hp[1], dust[1], true)
+                console.log(result)
+                var percentage = (result.ivs.map((dict) => {return dict.perfection}).reduce((prev, next)=>{return next + prev}))/result.ivs.length
                 if (result && result.ivs.length > 0) {
-                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.explanation}`)
+                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.averageGrade.preciseLetter} (${percentage.toFixed(2)}%)`)
                 } else {
                     replyto.replyToUser(reply, profile, `Something went wrong, one of the parameter isn't correct`)
                 }
@@ -519,6 +521,9 @@ function getGreeting(reply, profile, session) {
 function getThank(reply, profile) {
     replyto.replyToUser(reply, profile, "You're welcome")
 }
+function getForeignLanguage(reply, profile) {
+    replyto.replyToUser(reply, profile, "Sorry, I learned only english language at school. Could you please talk to me in english?\nThank you")
+}
 function getNotUnderstand(reply, profile, session) {
     if(!welcomeNewUser(reply, profile, session)){
         replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
@@ -577,6 +582,7 @@ module.exports.getGreeting = getGreeting
 module.exports.getThank = getThank
 module.exports.getExamples = getExamples
 module.exports.getBye = getBye
+module.exports.getForeignLanguage = getForeignLanguage
 module.exports.getPoGo = getPoGo
 module.exports.getPoGOEvolution = getPoGOEvolution
 module.exports.getPoGOIV = getPoGOIV

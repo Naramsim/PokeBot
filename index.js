@@ -15,13 +15,15 @@ var thanks_keywords = ["thanks", "tnx", "ty","(Y)", "thank"]
 var beat_keywords = ["beat", "defeat", "rid", "overcome", "counter", "effective"]
 var greetings_keywords = ["hello", "hi", "hei", "ola"]
 var bye_keywords = ["bye", "see u", "see ya", "see you", "byebye"]
-var yes_keywords = ["ok", "yes", "yep", "okok", "alright", "k", "okay"]
+var yes_keywords = ["ok", "yes", "yep", "okok", "alright", "k", "okay", "gg"]
 var no_keywords = ["no", "nope", "nono"]
 var pokemon_go_keywords = ["pogo", "pokemongo", "pokemon go", "pokestop", "pokemon stop"]
 var cry_keywords = ["cry", "sound", "noise", "cries"]
 var example_keywords = ["example", "examples"]
 var evolve_keywords = ["evolve", "evolution"]
-var IV_keywords = ["iv", "power", "cp"]
+var IV_keywords = ["iv", "cp"]
+var pokebot_keywords = ["pokebot", "pokemonbot", "bot", "pokébot", "pokèbot"]
+var foreign_keywords = ["comenzar", "spanish", "espanol", "geht"]
 
 try {
     var secret = require("./tokens.json")
@@ -136,6 +138,8 @@ bot.on('message', (payload, reply) => {
             if(intersect(tokens, example_keywords)) {get.getExamples(reply, profile)}else
             
             if(intersect(tokens, thanks_keywords)) {get.getThank(reply, profile)}else
+
+            if(intersect(tokens, foreign_keywords)) {get.getForeignLanguage(reply, profile)}else
             
             if(intersect(tokens, bye_keywords)) {get.getBye(reply, profile)}else
 
@@ -148,6 +152,8 @@ bot.on('message', (payload, reply) => {
             if(intersect(tokens, yes_keywords)) {replyto.replyToUser(reply, profile, "GG")}else
             
             if(intersect(tokens, no_keywords)) {replyto.replyToUser(reply, profile, "Why? :P")}else
+
+            if(intersect(tokens, pokebot_keywords)) {replyto.replyToUser(reply, profile, "Pokebot? It's me!")}else
 
             {
                 var recognizedPokemon = get.recognizePokemon(tokens)
@@ -175,7 +181,7 @@ bot.on('message', (payload, reply) => {
 
         // attachments
 
-        if (payload.message && payload.message.attachments) {
+        if (payload.message && payload.message.attachments && !payload.message.sticker_id) {
             replyto.replyToUserWithImage(reply, profile, 'http://mrwgifs.com/wp-content/uploads/2013/11/Happy-Pikachu-Pichu-Pokemon-Running-For-Ash-Ketchum.gif')
         }
 
