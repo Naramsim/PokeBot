@@ -241,6 +241,20 @@ function getPoGOIV(reply, profile, msg, tokens) {
     }catch(e){console.log(e)}
 }
 
+function getPoGoNearPokemons (reply, profile, coordinates) {
+    try{
+        if (coordinates) {
+            let urls = [
+                ['FastPokeMap', `https://fastpokemap.se/#${coordinates.lat},${coordinates.long}`],
+                ['Skiplagged', `https://skiplagged.com/catch-that/#${coordinates.lat},${coordinates.long},14`]
+            ]
+            replyto.replyToUserWithButtonUrl(reply, profile, 'Click one button below to see your nearest Pokemons', urls)
+        } else {
+            replyto.replyToUser(reply, profile, 'Mmm..')
+        }
+    }catch(e){console.log(e)}
+}
+
 function getItemInfo(reply, profile, recognizedItem) {
     try{
         var cachedResult = cache.get(recognizedItem)
@@ -551,6 +565,9 @@ function getHelp(reply, profile) {
 function getPoGoHelp(reply, profile) {
     try {
         replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
+        setTimeout(() => {
+            replyto.replyToUser(reply, profile, `Additionally I can show you your nearest Pokemons! Just send me your location and I will reply back a map with your Pokemons`)
+        },2000)
     }catch(e){console.log(e)}   
 }
 function getExamples(reply, profile) {
@@ -604,6 +621,7 @@ module.exports.getForeignLanguage = getForeignLanguage
 module.exports.getPoGo = getPoGo
 module.exports.getPoGOEvolution = getPoGOEvolution
 module.exports.getPoGOIV = getPoGOIV
+module.exports.getPoGoNearPokemons = getPoGoNearPokemons
 module.exports.getPoGoHelp = getPoGoHelp
 module.exports.getHelp = getHelp
 module.exports.getStarted = getStarted
@@ -616,4 +634,4 @@ module.exports.getMoveInfo = getMoveInfo
 module.exports.getItemInfo = getItemInfo
 module.exports.getAbilityInfo = getAbilityInfo
 module.exports.getNotUnderstand = getNotUnderstand
-module.exports.recognize = recognize
+module.exports.recognize = recognize 

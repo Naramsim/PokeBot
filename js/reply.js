@@ -64,7 +64,33 @@ var replyToUserWithAudio = function(reply, profile, audioUrl) {
     }catch(e){console.log(e)}
 }
 
+var replyToUserWithButtonUrl = function(reply, profile, message, urls) {
+    try {
+        var attachment = {  "type": "template",
+                            "payload": {
+                                "template_type": "button",
+                                "text": message,
+                                "buttons": []
+                            }
+                        }
+        urls.forEach((url) => {
+            attachment.payload.buttons.push({
+                                        "type": "web_url",
+                                        "url": url[1],
+                                        "title": url[0]
+                                    })
+        })
+        reply({ attachment }, (err) => { //need to pass exact name text
+            if (err) {console.log(err)}
+            try{
+                console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${message}`)
+            }catch(e){console.log(e)}
+        })
+    }catch(e){console.log(e)}
+}
+
 module.exports.replyToUser = replyToUser
 module.exports.replyToUserWithImage = replyToUserWithImage
 module.exports.replyToUserWithAudio = replyToUserWithAudio
 module.exports.replyToUserWithHints = replyToUserWithHints
+module.exports.replyToUserWithButtonUrl = replyToUserWithButtonUrl

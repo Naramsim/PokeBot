@@ -107,7 +107,7 @@ bot.on('message', (payload, reply) => {
     console.log("new msg")
     bot.getProfile(payload.sender.id, (err, profile) => {
         if (err) {console.log(err)}
-
+        console.log(payload.message)
         // text message
         if (payload.message && payload.message.text) { 
             bot.setTyping(payload.sender.id, true)
@@ -177,7 +177,11 @@ bot.on('message', (payload, reply) => {
         // sticker
         if (payload.message && payload.message.sticker_id) { 
             replyto.replyToUser(reply, profile, "^_^")
-        }
+        } else
+
+        if (payload.message && payload.message.attachments && payload.message.attachments[0].payload.coordinates) { 
+            get.getPoGoNearPokemons(reply, profile, payload.message.attachments[0].payload.coordinates)
+        } else
 
         // attachments
 
