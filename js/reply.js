@@ -20,6 +20,7 @@ var replyToUserWithHints = function(reply, profile, answer, hints, payload){
         if(!!answer) {
             var answerLength = answer.length
             var text = answer.slice(0, 300)
+            console.log(hints)
             var quick_replies = hints.map((hint) => {
                 return {
                     content_type: 'text',
@@ -28,6 +29,42 @@ var replyToUserWithHints = function(reply, profile, answer, hints, payload){
                 };
             })
             reply({ text, quick_replies }, (err) => { //need to pass exact name text
+                if (err) {console.log(err)}
+                try{
+                    replyToUser(reply, profile, answer.slice(300))
+                    console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
+                }catch(e){console.log(e)}
+            })  
+        }
+    }catch(e){console.log(e)}
+}
+
+var replyToUserWithGeneric = function(reply, profile, imageUrl, urls, answer, subtitle){
+    try{
+        if (answer && imageUrl && urls) {
+            var answerLength = answer.length
+            var text = answer.slice(0, 300)
+            var attachment = {  "type": "template",
+                                "payload": {
+                                    "template_type": "generic",
+                                    "elements": [
+                                        {
+                                            "title": answer,
+                                            "image_url": imageUrl,
+                                            "subtitle": subtitle,
+                                            "buttons": []
+                                        }
+                                    ]
+                                }
+                            }
+            urls.forEach((url) => {
+                attachment.payload.elements[0].buttons.push({
+                                            "type": "web_url",
+                                            "url": url[1],
+                                            "title": url[0]
+                                        })
+            })
+            reply({ attachment }, (err) => { //need to pass exact name text
                 if (err) {console.log(err)}
                 try{
                     replyToUser(reply, profile, answer.slice(300))
@@ -94,3 +131,4 @@ module.exports.replyToUserWithImage = replyToUserWithImage
 module.exports.replyToUserWithAudio = replyToUserWithAudio
 module.exports.replyToUserWithHints = replyToUserWithHints
 module.exports.replyToUserWithButtonUrl = replyToUserWithButtonUrl
+module.exports.replyToUserWithGeneric = replyToUserWithGeneric

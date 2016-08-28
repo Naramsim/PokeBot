@@ -324,10 +324,12 @@ function getItemInfo(reply, profile, recognizedItem) {
     }
 }
 
-function getPokemonInfo(reply, profile, pokemon_) {
+function getPokemonInfo(reply, profile, pokemon_, session) {
     var pokemon = pokemon_
     if(pokemon) {
         try {
+            session.isAnswering = "more_info_pokemon"
+            session.pokemon = pokemon
             var cachedResult = cache.get(pokemon)
             if(cachedResult !== null){
                 returnPokemonInfo(cachedResult)
@@ -367,19 +369,37 @@ function getPokemonInfo(reply, profile, pokemon_) {
                 toReturn = toReturn.capitalizeFirstLetter()
                 replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
                 setTimeout(() => {
+                    pokemon_abilities = pokemon_abilities.map(ability => `What's ${beautify(ability)}?`)
+                    pokemon_abilities.push('Give me more info')
                     if (pokemon_abilities.length > 0) {
                         if (pokemon_abilities.length === 1) {
                             pokemon_abilities.push('Thank you')
                         }
-                        replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities.map(ability => `What's ${beautify(ability)}?`), 'ABILITY')
+                        replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities, 'ABILITY')
                     } else {
-                        replyto.replyToUser(reply, profile, toReturn)
+                        replyto.replyToUser(reply, profile, toReturn) // never enter here
                     }
                 },2000)
             }catch(e){console.log(e)}
         }
         return true
     }else{return false}
+}
+
+function getPokemonMoreInfo(reply, profile, text, session) {
+    try {
+        if (text && session && session.pokemon && session.isAnswering === 'more_info_pokemon') {
+            session.isAnswering = null
+            let urls = [
+                ["Colosseum", `https://naramsim.github.io/Colosseum/#${session.pokemon}`],
+                ["PokemonDB", `https://pokemondb.net/pokedex/${session.pokemon}`]
+            ]
+            let imageUrl = `http://veekun.com/dex/media/pokemon/global-link/${convert.toPokemonId(session.pokemon)}.png`
+            let answer = session.pokemon
+            let subtitle = 'Click one of the link belows to get more info :)'
+            replyto.replyToUserWithGeneric(reply, profile, imageUrl, urls, answer, subtitle)
+        }
+    } catch (e) {console.log(e)}
 }
 
 function getMoveInfo(reply, profile, move) {
@@ -630,6 +650,7 @@ module.exports.recognizeMove = recognizeMove
 module.exports.recognizeItem = recognizeItem
 module.exports.recognizeAbility = recognizeAbility
 module.exports.getPokemonInfo = getPokemonInfo
+module.exports.getPokemonMoreInfo = getPokemonMoreInfo
 module.exports.getMoveInfo = getMoveInfo
 module.exports.getItemInfo = getItemInfo
 module.exports.getAbilityInfo = getAbilityInfo

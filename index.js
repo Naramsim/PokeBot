@@ -8,7 +8,6 @@ var replyto = require("./js/reply.js")
 var get = require("./js/get.js")
 var store = require("./js/store.js")
 
-
 var location_keywords = ["where", "location", "located"]
 var info_keywords = ["info", "infos", "information", "informations", "who"]
 var thanks_keywords = ["thanks", "tnx", "ty","(Y)", "thank"]
@@ -122,8 +121,10 @@ bot.on('message', (payload, reply) => {
             if(store.isRedundant(session)){replyto.replyToUser(reply, profile, "Ehm...")}else
 
             if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, msg, session)}else // Location
+
+            if(session.isAnswering === "more_info_pokemon"){get.getPokemonMoreInfo(reply, profile, msg, session)}else 
             
-            if(intersect(tokens, location_keywords) && !tokens.contains("item")) {get.askWhichGame(reply, profile,  tokens, session)}else //ask game
+            if(intersect(tokens, location_keywords) && !tokens.contains("item")) {get.askWhichGame(reply, profile,  tokens, session)}else // ask game
             
             if(intersect(tokens, beat_keywords)) {get.getPokemonWeakness(reply, profile, tokens)}else // Best move
 
@@ -164,7 +165,7 @@ bot.on('message', (payload, reply) => {
                 var recognizedEmoji = recognize[0]
                 var recognizedLaughs = recognize[1]
 
-                if(!!recognizedPokemon) {get.getPokemonInfo(reply, profile, recognizedPokemon)}else
+                if(!!recognizedPokemon) {get.getPokemonInfo(reply, profile, recognizedPokemon, session)}else
                 if(!!recognizedMove) {get.getMoveInfo(reply, profile, recognizedMove)}else
                 if(!!recognizedItem) {get.getItemInfo(reply, profile, recognizedItem)}else
                 if(!!recognizedAbility) {get.getAbilityInfo(reply, profile, recognizedAbility)}else
