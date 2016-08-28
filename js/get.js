@@ -175,7 +175,7 @@ function getPokemonWeakness(reply, profile, tokens) {
                         if(shit_attacks.length !== 0){shit_attacks = "do NOT use " + shit_attacks.slice(0,-2) +" moves"}else{weak_attacks = weak_attacks.slice(0,-2)}
 
                         var toReturn = `To beat ${pokemon} ${best_attacks}${pro_attacks}${weak_attacks}${shit_attacks}`
-                        toReturn = toReturn.capitalizeFirstvarter() //TODO: make more messages // limit: 320 chars
+                        toReturn = toReturn.capitalizeFirstLetter() //TODO: make more messages // limit: 320 chars
                         replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
                         replyto.replyToUser(reply, profile, toReturn)
                     }
@@ -228,7 +228,7 @@ function getPoGOIV(reply, profile, msg, tokens) {
                 console.log(result)
                 var percentage = (result.ivs.map((dict) => {return dict.perfection}).reduce((prev, next)=>{return next + prev}))/result.ivs.length
                 if (result && result.ivs.length > 0) {
-                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.averageGrade.precisevarter} (${percentage.toFixed(2)}%)`)
+                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.averageGrade.preciseLetter} (${percentage.toFixed(2)}%)`)
                 } else {
                     replyto.replyToUser(reply, profile, `Something went wrong, one of the parameter isn't correct`)
                 }
@@ -293,9 +293,9 @@ function getItemInfo(reply, profile, recognizedItem) {
                     if (move.length <= 9) {
                         inner_moves.push(`What ${move} does?`)
                     } else if (move.length <= 12) {
-                        inner_moves.push(`${move.capitalizeFirstvarter()} effect`)
+                        inner_moves.push(`${move.capitalizeFirstLetter()} effect`)
                     } else {
-                        inner_moves.push(`${move.capitalizeFirstvarter()}`)
+                        inner_moves.push(`${move.capitalizeFirstLetter()}`)
                     }
                 }
             })
@@ -366,7 +366,7 @@ function getPokemonInfo(reply, profile, pokemon_, session) {
                 response.stats.forEach(function(stat){pokemon_stats = pokemon_stats + beautify(stat.stat.name) + "-> " + stat.base_stat + "\n"})
                 var pokemon_sprite = "http://veekun.com/dex/media/pokemon/global-link/"+ convert.toPokemonId(pokemon) + ".png"
                 var toReturn = `${pokemon} is a ${pokemon_types}pokemon, it could have these abilities: ${pokemon_abilities.join(', ')}.\nThese are its initial stats: ${pokemon_stats}`
-                toReturn = toReturn.capitalizeFirstvarter()
+                toReturn = toReturn.capitalizeFirstLetter()
                 replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
                 setTimeout(() => {
                     pokemon_abilities = pokemon_abilities.map(ability => `What's ${beautify(ability)}?`)
@@ -430,7 +430,7 @@ function getMoveInfo(reply, profile, move) {
             cache.put(move, response, CACHE_LIMIT) //one day
             var damage_dealt = response.power === null ? "" : `It deals ${response.power} damage points.`
             var toReturn = `${move} is a ${response.type.name} move.\n${response.effect_entries[0].effect}.\nIt's accuracy is ${response.accuracy}, and the initial PPs are ${response.pp}. ${damage_dealt}`
-            toReturn = toReturn.capitalizeFirstvarter()
+            toReturn = toReturn.capitalizeFirstLetter()
             replyto.replyToUser(reply, profile, toReturn)
         }catch(e){console.log(e)}
     }
@@ -464,7 +464,7 @@ function getAbilityInfo(reply, profile, ability) {
             cache.put(ability, response, CACHE_LIMIT) //one day
             if (response.effect_entries.length > 0) {
                 var toReturn = response.effect_entries[0].effect
-                toReturn = toReturn.capitalizeFirstvarter()
+                toReturn = toReturn.capitalizeFirstLetter()
                 replyto.replyToUser(reply, profile, toReturn)
             } else {
                 replyto.replyToUser(reply, profile, 'This ability is so mysterious that I don\'t even know its effects')
