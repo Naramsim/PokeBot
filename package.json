@@ -25,7 +25,7 @@
     "forever": "^0.15.2",
     "intersect": "^1.0.1",
     "memory-cache": "^0.1.6",
-    "messenger-bot": "git+https://github.com/eXeDK/messenger-bot.git",
+    "messenger-bot": "^2.4.0",
     "ngrok": "^2.2.2",
     "node-wit": "^4.0.0",
     "now-logs": "0.0.7",
