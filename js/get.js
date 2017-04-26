@@ -224,9 +224,11 @@ function getPoGOIV(reply, profile, msg, tokens) {
             var hp = msg.match(/(?:hp[\s-]?)(\d{1,5})/)
             var dust = msg.match(/(\d{1,5})\s?(?:star)?dust/)
             if (cp && hp && dust) {
-                const result = ivCalculator.evaluate(pokemon.charAt(0).toUpperCase() + pokemon.slice(1), cp[1], hp[1], dust[1])
+                const result = ivCalculator.evaluate(pokemon.charAt(0).toUpperCase() + pokemon.slice(1), cp[1], hp[1], dust[1], true)
+                console.log(result)
+                var percentage = (result.ivs.map((dict) => {return dict.perfection}).reduce((prev, next)=>{return next + prev}))/result.ivs.length
                 if (result && result.ivs.length > 0) {
-                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.explanation}`)
+                    replyto.replyToUser(reply, profile, `Your ${pokemon} has an IV rating equal to ${result.grade.averageGrade.precisevarter} (${percentage.toFixed(2)}%)`)
                 } else {
                     replyto.replyToUser(reply, profile, `Something went wrong, one of the parameter isn't correct`)
                 }
@@ -235,6 +237,20 @@ function getPoGOIV(reply, profile, msg, tokens) {
             }
         } else {
             replyto.replyToUser(reply, profile, 'IV (Individual Values) are hidden stats that affect how strong your Pokemon is in Gym Battles, beyond the Pokemon\'s CP rating\nTo calculate it type: calculate IV for [pokemon] with CP [cp], HP [hp] and [current dust upgrade cost] dust')
+        }
+    }catch(e){console.log(e)}
+}
+
+function getPoGoNearPokemons (reply, profile, coordinates) {
+    try{
+        if (coordinates) {
+            var urls = [
+                ['FastPokeMap', `https://fastpokemap.se/#${coordinates.lat},${coordinates.long}`],
+                ['Skiplagged', `https://skiplagged.com/catch-that/#${coordinates.lat},${coordinates.long},14`]
+            ]
+            replyto.replyToUserWithButtonUrl(reply, profile, 'Click one button below to see your nearest Pokemons', urls)
+        } else {
+            replyto.replyToUser(reply, profile, 'Mmm..')
         }
     }catch(e){console.log(e)}
 }
@@ -308,10 +324,12 @@ function getItemInfo(reply, profile, recognizedItem) {
     }
 }
 
-function getPokemonInfo(reply, profile, pokemon_) {
+function getPokemonInfo(reply, profile, pokemon_, session) {
     var pokemon = pokemon_
     if(pokemon) {
         try {
+            session.isAnswering = "more_info_pokemon"
+            session.pokemon = pokemon
             var cachedResult = cache.get(pokemon)
             if(cachedResult !== null){
                 returnPokemonInfo(cachedResult)
@@ -351,19 +369,37 @@ function getPokemonInfo(reply, profile, pokemon_) {
                 toReturn = toReturn.capitalizeFirstLetter()
                 replyto.replyToUserWithImage(reply, profile, pokemon_sprite)
                 setTimeout(() => {
+                    pokemon_abilities = pokemon_abilities.map(ability => `What's ${beautify(ability)}?`)
+                    pokemon_abilities.push('Give me more info')
                     if (pokemon_abilities.length > 0) {
                         if (pokemon_abilities.length === 1) {
                             pokemon_abilities.push('Thank you')
                         }
-                        replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities.map(ability => `What's ${beautify(ability)}?`), 'ABILITY')
+                        replyto.replyToUserWithHints(reply, profile, toReturn, pokemon_abilities, 'ABILITY')
                     } else {
-                        replyto.replyToUser(reply, profile, toReturn)
+                        replyto.replyToUser(reply, profile, toReturn) // never enter here
                     }
                 },2000)
             }catch(e){console.log(e)}
         }
         return true
     }else{return false}
+}
+
+function getPokemonMoreInfo(reply, profile, text, session) {
+    try {
+        if (text && session && session.pokemon && session.isAnswering === 'more_info_pokemon') {
+            session.isAnswering = null
+            var urls = [
+                ["Colosseum", `https://naramsim.github.io/Colosseum/#${session.pokemon}`],
+                ["PokemonDB", `https://pokemondb.net/pokedex/${session.pokemon}`]
+            ]
+            var imageUrl = `http://veekun.com/dex/media/pokemon/global-link/${convert.toPokemonId(session.pokemon)}.png`
+            var answer = session.pokemon
+            var subtitle = 'Click one of the link belows to get more info :)'
+            replyto.replyToUserWithGeneric(reply, profile, imageUrl, urls, answer, subtitle)
+        }
+    } catch (e) {console.log(e)}
 }
 
 function getMoveInfo(reply, profile, move) {
@@ -517,27 +553,47 @@ function getGreeting(reply, profile, session) {
     }
 }
 function getThank(reply, profile) {
-    replyto.replyToUser(reply, profile, "You're welcome")
+    try {
+        replyto.replyToUser(reply, profile, "You're welcome")
+    }catch(e){console.log(e)}
+}
+function getForeignLanguage(reply, profile) {
+    try {
+        replyto.replyToUser(reply, profile, "Sorry, I learned only english language at school. Could you please talk to me in english?\nThank you")
+    }catch(e){console.log(e)}
 }
 function getNotUnderstand(reply, profile, session) {
-    if(!welcomeNewUser(reply, profile, session)){
-        replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
-    }
+    try {
+        if(!welcomeNewUser(reply, profile, session)){
+            replyto.replyToUser(reply, profile, profile.first_name + ", I didn't catch what you said")
+        }
+    }catch(e){console.log(e)}
 }
 function getStarted(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about Pokemons, where to find a specific Pokemon in a specific game, which are the best moves for defeating a Pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot. You can ask me infos about Pokemons, where to find a specific Pokemon in a specific game, which are the best moves for defeating a Pokemon, item infos, which are the effects of a move...Just remember to space objects or moves, like super potion.`)
+    }catch(e){console.log(e)}
 }
 function getHelp(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where a Pokemon is, Pokemons info, best moves to defeat a Pokemon, effects of a move, items infos, Pokemons cries, TMs content, berries effects.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
-    setTimeout(() => {
-        replyto.replyToUserWithHints(reply, profile, `If you want help with Pokemon Go type: help PoGo`, ['Show some examples', 'Help PoGo', 'Thanks'], 'HELP')
-    },1000)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I'm PokéBot.\nYou can ask me where a Pokemon is, Pokemons info, best moves to defeat a Pokemon, effects of a move, items infos, Pokemons cries, TMs content, berries effects.\nRemember to space objects or moves, like super potion, old rod, mega punch...`)
+        setTimeout(() => {
+            replyto.replyToUserWithHints(reply, profile, `If you want help with Pokemon Go type: help PoGo`, ['Show some examples', 'Help PoGo', 'Thanks'], 'HELP')
+        },1000)
+    }catch(e){console.log(e)}
 }
 function getPoGoHelp(reply, profile) {
-    replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
+    try {
+        replyto.replyToUser(reply, profile, `Hi ${profile.first_name}, I can show you the current IV for one of your Pokemon or tell you the CP a Pokemon will have when evolved. Use this syntax:\n • Calculate IV for Raticate cp 328 hp 47 1000 dust(where 1000 is how much dust you need to power it up)\n • Calculate CP after evolution of Geodude with 340 CP`)
+        setTimeout(() => {
+            replyto.replyToUser(reply, profile, `Additionally I can show you your nearest Pokemons! Just send me your location and I will reply back a map with your Pokemons`)
+        },2000)
+    }catch(e){console.log(e)}   
 }
 function getExamples(reply, profile) {
-    replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm50?", "What is an elixir?","Cheri berry effect"], 'EXAMPLE')
+    try {
+        replyto.replyToUserWithHints(reply, profile, "Here are your examples", ["Torkoal info", "Where is geodude?", "Effect of solar beam", "How to beat quilava?", "What is inside tm50?", "What is an elixir?","Cheri berry effect"], 'EXAMPLE')
+    }catch(e){console.log(e)}
 }
 function welcomeNewUser(reply, profile, session) {
     try{
@@ -551,10 +607,14 @@ function welcomeNewUser(reply, profile, session) {
     }catch(e){console.log(e)}
 }
 function getBye(reply, profile) {
-    replyto.replyToUser(reply, profile, "Byeeee!")
+    try{
+        replyto.replyToUser(reply, profile, "Byeeee!")
+    }catch(e){console.log(e)}
 }
 function getPoGo(reply, profile) {
-    replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
+    try{
+        replyto.replyToUser(reply, profile, "Look a Caterpie! On your right, catch it")
+    }catch(e){console.log(e)}
 }
 function recognize(tokens) {
     try {
@@ -577,9 +637,11 @@ module.exports.getGreeting = getGreeting
 module.exports.getThank = getThank
 module.exports.getExamples = getExamples
 module.exports.getBye = getBye
+module.exports.getForeignLanguage = getForeignLanguage
 module.exports.getPoGo = getPoGo
 module.exports.getPoGOEvolution = getPoGOEvolution
 module.exports.getPoGOIV = getPoGOIV
+module.exports.getPoGoNearPokemons = getPoGoNearPokemons
 module.exports.getPoGoHelp = getPoGoHelp
 module.exports.getHelp = getHelp
 module.exports.getStarted = getStarted
@@ -588,8 +650,9 @@ module.exports.recognizeMove = recognizeMove
 module.exports.recognizeItem = recognizeItem
 module.exports.recognizeAbility = recognizeAbility
 module.exports.getPokemonInfo = getPokemonInfo
+module.exports.getPokemonMoreInfo = getPokemonMoreInfo
 module.exports.getMoveInfo = getMoveInfo
 module.exports.getItemInfo = getItemInfo
 module.exports.getAbilityInfo = getAbilityInfo
 module.exports.getNotUnderstand = getNotUnderstand
-module.exports.recognize = recognize
+module.exports.recognize = recognize 
