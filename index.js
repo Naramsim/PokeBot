@@ -112,7 +112,7 @@ bot.on('postback', (payload, reply) => {
     } 
 })
 
-bot.on('message', (payload, reply) => {
+bot.on('message', (payload, reply, actions) => {
     try {
         console.log("new msg")
         bot.getProfile(payload.sender.id, (err, profile) => {
@@ -120,7 +120,7 @@ bot.on('message', (payload, reply) => {
             console.log(payload.message)
             // text message
             if (payload.message && payload.message.text) { 
-                bot.setTyping(payload.sender.id, true)
+                actions.setTyping(true)
 
                 const sessionId = findOrCreateSession(payload.sender.id)
                 var msg = payload.message.text.toLowerCase()
