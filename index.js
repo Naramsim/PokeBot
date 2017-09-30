@@ -25,6 +25,12 @@ var pokebot_keywords = ["pokebot", "pokemonbot", "bot", "pokébot", "pokèbot"]
 var foreign_keywords = ["comenzar", "spanish", "espanol", "geht"]
 
 try {
+    require('now-logs')(process.env.LOG_TOKEN)
+} catch (e) {
+    console.log("missing env var")
+}
+
+try {
     var secret = require("./tokens.json")
     var bot = new Bot({
         token: secret.token,
@@ -74,123 +80,130 @@ bot.on('error', (err) => {
 })
 
 bot.on('postback', (payload, reply) => {
-    if (payload) {
-        if (payload.postback.payload === 'GET_STARTED') {
-            bot.getProfile(payload.sender.id, (err, profile) => {
-                if (err) {console.log(err)}
-                get.getStarted(reply, profile)
-            })
-        }
-        if (payload.postback.payload === 'EXAMPLES') {
-            bot.getProfile(payload.sender.id, (err, profile) => {
-                if (err) {console.log(err)}
-                get.getExamples(reply, profile)
-            })
-        }
-        if (payload.postback.payload === 'POGO_HELP') {
-            bot.getProfile(payload.sender.id, (err, profile) => {
-                if (err) {console.log(err)}
-                get.getPoGoHelp(reply, profile)
-            })
-        }
-        if (payload.postback.payload === 'HELP') {
-            bot.getProfile(payload.sender.id, (err, profile) => {
-                if (err) {console.log(err)}
-                get.getHelp(reply, profile)
-            })
-        }
-    }
-})
-
-bot.on('message', (payload, reply) => {
-    console.log("new msg")
-    bot.getProfile(payload.sender.id, (err, profile) => {
-        if (err) {console.log(err)}
-        console.log(payload.message)
-        // text message
-        if (payload.message && payload.message.text) { 
-            bot.setTyping(payload.sender.id, true)
-
-            const sessionId = findOrCreateSession(payload.sender.id)
-            var msg = payload.message.text.toLowerCase()
-            var session = sessions[sessionId]
-            var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
-
-            store.storeMsg(session, msg)
-
-            if(store.isRedundant(session)){replyto.replyToUser(reply, profile, "Ehm...")}else
-
-            if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, msg, session)}else // Location
-
-            if(session.isAnswering === "more_info_pokemon"){get.getPokemonMoreInfo(reply, profile, msg, session)}else 
-            
-            if(intersect(tokens, location_keywords) && !tokens.contains("item")) {get.askWhichGame(reply, profile,  tokens, session)}else // ask game
-            
-            if(intersect(tokens, beat_keywords)) {get.getPokemonWeakness(reply, profile, tokens)}else // Best move
-
-            if(intersect(tokens, cry_keywords)) {get.getPokemonCry(reply, profile, tokens)}else // Cry
-
-            if(intersect(tokens, evolve_keywords)) {get.getPoGOEvolution(reply, profile, tokens)}else // PoGo evolution
-
-            if(intersect(tokens, IV_keywords)) {get.getPoGOIV(reply, profile, msg, tokens)}else // PoGo IV
-            
-            if(intersect(tokens, greetings_keywords)) {get.getGreeting(reply, profile, session)}else
-
-            if(intersect(tokens, example_keywords)) {get.getExamples(reply, profile)}else
-            
-            if(intersect(tokens, thanks_keywords)) {get.getThank(reply, profile)}else
-
-            if(intersect(tokens, foreign_keywords)) {get.getForeignLanguage(reply, profile)}else
-            
-            if(intersect(tokens, bye_keywords)) {get.getBye(reply, profile)}else
-
-            if(msg === "help pogo" || msg === "Pokemon Go help") {get.getPoGoHelp(reply, profile)}else
-            
-            if(tokens.contains("help")) {get.getHelp(reply, profile)}else
-
-            if(intersect(tokens, pokemon_go_keywords)) {get.getPoGo(reply, profile)}else
-            
-            if(intersect(tokens, yes_keywords)) {replyto.replyToUser(reply, profile, "GG")}else
-            
-            if(intersect(tokens, no_keywords)) {replyto.replyToUser(reply, profile, "Why? :P")}else
-
-            if(intersect(tokens, pokebot_keywords)) {replyto.replyToUser(reply, profile, "Pokebot? It's me!")}else
-
-            {
-                var recognizedPokemon = get.recognizePokemon(tokens)
-                var recognizedMove = get.recognizeMove(msg)
-                var recognizedItem = get.recognizeItem(msg)
-                var recognizedAbility = get.recognizeAbility(msg)
-                var recognize = get.recognize(tokens)
-                var recognizedEmoji = recognize[0]
-                var recognizedLaughs = recognize[1]
-
-                if(!!recognizedPokemon) {get.getPokemonInfo(reply, profile, recognizedPokemon, session)}else
-                if(!!recognizedMove) {get.getMoveInfo(reply, profile, recognizedMove)}else
-                if(!!recognizedItem) {get.getItemInfo(reply, profile, recognizedItem)}else
-                if(!!recognizedAbility) {get.getAbilityInfo(reply, profile, recognizedAbility)}else
-                if(!!recognizedEmoji) {replyto.replyToUser(reply, profile, recognizedEmoji)}else
-                if(!!recognizedLaughs) {replyto.replyToUser(reply, profile, "(Y)")}else
-                {get.getNotUnderstand(reply, profile, session)}
+    try {
+        if (payload) {
+            if (payload.postback.payload === 'GET_STARTED') {
+                bot.getProfile(payload.sender.id, (err, profile) => {
+                    if (err) {console.log(err)}
+                    get.getStarted(reply, profile)
+                })
+            }
+            if (payload.postback.payload === 'EXAMPLES') {
+                bot.getProfile(payload.sender.id, (err, profile) => {
+                    if (err) {console.log(err)}
+                    get.getExamples(reply, profile)
+                })
+            }
+            if (payload.postback.payload === 'POGO_HELP') {
+                bot.getProfile(payload.sender.id, (err, profile) => {
+                    if (err) {console.log(err)}
+                    get.getPoGoHelp(reply, profile)
+                })
+            }
+            if (payload.postback.payload === 'HELP') {
+                bot.getProfile(payload.sender.id, (err, profile) => {
+                    if (err) {console.log(err)}
+                    get.getHelp(reply, profile)
+                })
             }
         }
+    } catch (e) {
+        console.log(e)
+    } 
+})
 
-        // sticker
-        if (payload.message && payload.message.sticker_id) { 
-            replyto.replyToUser(reply, profile, "^_^")
-        } else
+bot.on('message', (payload, reply, actions) => {
+    try {
+        console.log("new msg")
+        bot.getProfile(payload.sender.id, (err, profile) => {
+            if (err) {console.log(err)}
+            console.log(payload.message)
+            // text message
+            if (payload.message && payload.message.text) { 
+                actions.setTyping(true)
 
-        if (payload.message && payload.message.attachments && payload.message.attachments[0].payload.coordinates) { 
-            get.getPoGoNearPokemons(reply, profile, payload.message.attachments[0].payload.coordinates)
-        } else
+                const sessionId = findOrCreateSession(payload.sender.id)
+                var msg = payload.message.text.toLowerCase()
+                var session = sessions[sessionId]
+                var tokens = payload.message.text.toLowerCase().replace(/[\?\!\.\,\_]/g, ' ').split(' ')
 
-        // attachments
+                store.storeMsg(session, msg)
 
-        if (payload.message && payload.message.attachments && !payload.message.sticker_id) {
-            replyto.replyToUserWithImage(reply, profile, 'http://mrwgifs.com/wp-content/uploads/2013/11/Happy-Pikachu-Pichu-Pokemon-Running-For-Ash-Ketchum.gif')
-        }
+                if(store.isRedundant(session)){replyto.replyToUser(reply, profile, "Ehm...")}else
 
-    })
+                if(session.isAnswering === "pokemon_game_type"){get.getPokemonLocation(reply, profile, msg, session)}else // Location
+
+                if(session.isAnswering === "more_info_pokemon" && tokens.contains("more")){get.getPokemonMoreInfo(reply, profile, msg, session)}else 
+                
+                if(intersect(tokens, location_keywords) && !tokens.contains("item")) {get.askWhichGame(reply, profile,  tokens, session)}else // ask game
+                
+                if(intersect(tokens, beat_keywords)) {get.getPokemonWeakness(reply, profile, tokens)}else // Best move
+
+                if(intersect(tokens, cry_keywords)) {get.getPokemonCry(reply, profile, tokens)}else // Cry
+
+                if(intersect(tokens, evolve_keywords)) {get.getPoGOEvolution(reply, profile, tokens)}else // PoGo evolution
+
+                if(intersect(tokens, IV_keywords)) {get.getPoGOIV(reply, profile, msg, tokens)}else // PoGo IV
+                
+                if(intersect(tokens, greetings_keywords)) {get.getGreeting(reply, profile, session)}else
+
+                if(intersect(tokens, example_keywords)) {get.getExamples(reply, profile)}else
+                
+                if(intersect(tokens, thanks_keywords)) {get.getThank(reply, profile)}else
+
+                if(intersect(tokens, foreign_keywords)) {get.getForeignLanguage(reply, profile)}else
+                
+                if(intersect(tokens, bye_keywords)) {get.getBye(reply, profile)}else
+
+                if(msg === "help pogo" || msg === "Pokemon Go help") {get.getPoGoHelp(reply, profile)}else
+                
+                if(tokens.contains("help")) {get.getHelp(reply, profile)}else
+
+                if(intersect(tokens, pokemon_go_keywords)) {get.getPoGo(reply, profile)}else
+                
+                if(intersect(tokens, yes_keywords)) {replyto.replyToUser(reply, profile, "GG")}else
+                
+                if(intersect(tokens, no_keywords)) {replyto.replyToUser(reply, profile, "Why? :P")}else
+
+                if(intersect(tokens, pokebot_keywords)) {replyto.replyToUser(reply, profile, "Pokebot? It's me!")}else
+
+                {
+                    var recognizedPokemon = get.recognizePokemon(tokens)
+                    var recognizedMove = get.recognizeMove(msg)
+                    var recognizedItem = get.recognizeItem(msg)
+                    var recognizedAbility = get.recognizeAbility(msg)
+                    var recognize = get.recognize(tokens)
+                    var recognizedEmoji = recognize[0]
+                    var recognizedLaughs = recognize[1]
+
+                    if(!!recognizedPokemon) {get.getPokemonInfo(reply, profile, recognizedPokemon, session)}else
+                    if(!!recognizedMove) {get.getMoveInfo(reply, profile, recognizedMove)}else
+                    if(!!recognizedItem) {get.getItemInfo(reply, profile, recognizedItem)}else
+                    if(!!recognizedAbility) {get.getAbilityInfo(reply, profile, recognizedAbility)}else
+                    if(!!recognizedEmoji) {replyto.replyToUser(reply, profile, recognizedEmoji)}else
+                    if(!!recognizedLaughs) {replyto.replyToUser(reply, profile, "(Y)")}else
+                    {get.getNotUnderstand(reply, profile, session)}
+                }
+            }
+
+            // sticker
+            if (payload.message && payload.message.sticker_id) { 
+                replyto.replyToUser(reply, profile, "^_^")
+            } else
+
+            if (payload.message && payload.message.attachments && payload.message.attachments[0] && payload.message.attachments[0].payload && payload.message.attachments[0].payload.coordinates) { 
+                get.getPoGoNearPokemons(reply, profile, payload.message.attachments[0].payload.coordinates)
+            } else
+
+            // attachments
+
+            if (payload.message && payload.message.attachments && !payload.message.sticker_id) {
+                replyto.replyToUserWithImage(reply, profile, 'http://mrwgifs.com/wp-content/uploads/2013/11/Happy-Pikachu-Pichu-Pokemon-Running-For-Ash-Ketchum.gif')
+            }
+        });
+    } catch (e) {
+        console.log(e)
+    }
 })
 
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080

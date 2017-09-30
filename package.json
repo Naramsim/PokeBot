@@ -8,7 +8,8 @@
     "production": "forever stopall && forever start start.js",
     "debug": "node start.js",
     "start": "node start.js",
-    "ngrok": "ngrok http 8080"
+    "ngrok": "ngrok http 8080",
+    "now-deploy": "now -e POKEBOT_TOKEN=@pokebot_token -e POKEBOT_VERIFY=@pokebot_verify -e POKEBOT_APP_SECRET=@pokebot_app_secret -e LOG_TOKEN=@log_token"
   },
   "keywords": [
     "PokeBot",
@@ -24,9 +25,10 @@
     "forever": "^0.15.2",
     "intersect": "^1.0.1",
     "memory-cache": "^0.1.6",
-    "messenger-bot": "git+https://github.com/eXeDK/messenger-bot.git",
+    "messenger-bot": "^2.4.0",
     "ngrok": "^2.2.2",
     "node-wit": "^4.0.0",
+    "now-logs": "0.0.7",
     "pokemon-go-iv-calculator": "^0.3.2",
     "request": "^2.74.0",
     "request-promise": "^4.1.0"
