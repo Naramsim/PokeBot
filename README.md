@@ -22,3 +22,7 @@ Obvioulsy you don't need to write those exact questions, the bot is smart.
 * [pokeapi](https://github.com/PokeAPI/pokeapi)
 * [messenger-bot](https://github.com/remixz/messenger-bot)
 * [ninjask](https://github.com/Naramsim/ninjask)
+
+---
+
+As of April, 9th 2020 the bot had answered more than 2500 people on Messenger. It started answering on May, 5th 2016.
