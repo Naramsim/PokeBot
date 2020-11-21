@@ -9,7 +9,9 @@
     "debug": "node start.js",
     "start": "node start.js",
     "ngrok": "ngrok http 8080",
-    "now-deploy": "now -e POKEBOT_TOKEN=@pokebot_token -e POKEBOT_VERIFY=@pokebot_verify -e POKEBOT_APP_SECRET=@pokebot_app_secret -e LOG_TOKEN=@log_token"
+    "now-deploy": "now -e POKEBOT_TOKEN=@pokebot_token -e POKEBOT_VERIFY=@pokebot_verify -e POKEBOT_APP_SECRET=@pokebot_app_secret -e LOG_TOKEN=@log_token",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "keywords": [
     "PokeBot",
@@ -31,6 +33,8 @@
     "now-logs": "0.0.7",
     "pokemon-go-iv-calculator": "^0.3.2",
     "request": "^2.74.0",
-    "request-promise": "^4.1.0"
-  }
+    "request-promise": "^4.1.0",
+    "snyk": "^1.192.0"
+  },
+  "snyk": true
 }
