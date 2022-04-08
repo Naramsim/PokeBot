@@ -22,11 +22,11 @@
   "dependencies": {
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
-    "forever": "^0.15.2",
+    "forever": "^4.0.3",
     "intersect": "^1.0.1",
     "memory-cache": "^0.1.6",
     "messenger-bot": "^2.4.0",
-    "ngrok": "^2.2.2",
+    "ngrok": "^3.0.0",
     "node-wit": "^4.0.0",
     "now-logs": "0.0.7",
     "pokemon-go-iv-calculator": "^0.3.2",
